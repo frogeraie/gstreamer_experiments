@@ -1,7 +1,8 @@
 Patches
 =======
 
-Contains the motion detection patches for gst-plugins-bad, you can either either:
+Contains the motioncells patches for gst-plugins-bad, for details, see:
+https://bugzilla.gnome.org/show_bug.cgi?id=629244
 
 Apply with:
 
