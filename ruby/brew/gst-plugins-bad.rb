@@ -31,6 +31,8 @@ class GstPluginsBad < Formula
   def install
     ENV.append "CFLAGS", "-no-cpp-precomp -funroll-loops -fstrict-aliasing"
     system "./autogen.sh --noconfigure"
+    # Remove Wvla flag as it doesn't exist on LLVM and other compilers
+    system "sed -i '' 's/CFLAGS -Wvla/CFLAGS/' configure"
     system "./configure", "--prefix=#{prefix}", "--disable-debug",
                           "--disable-dependency-tracking", "--disable-sdl"
     system "make"
