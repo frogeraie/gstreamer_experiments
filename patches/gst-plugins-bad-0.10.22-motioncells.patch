@@ -1,1 +1,2613 @@
-gst-plugins-bad-0.10.22-motioncells-v1.patch
+diff -rupN orig/configure.ac new/configure.ac
+--- orig/configure.ac	2011-05-09 21:45:37.000000000 +0100
++++ new/configure.ac	2011-07-05 18:59:41.000000000 +0100
+@@ -108,9 +108,12 @@ AC_PROG_CC_STDC
+ 
+ dnl determine c++ compiler
+ AC_PROG_CXX
++AC_LANG_CPLUSPLUS
++OLD_CPPFLAGS=$CPPFLAGS
++CPPFLAGS=$OPENCV_CFLAGS
+ dnl determine if c++ is available on this system
+ AC_CHECK_PROG(HAVE_CXX, $CXX, yes, no)
+-
++CPPFLAGS=$OLD_CPPFLAGS
+ AS_PROG_OBJC
+ 
+ dnl check if the compiler supports '-c' and '-o' options
+diff -rupN orig/docs/plugins/gst-plugins-bad-plugins.args new/docs/plugins/gst-plugins-bad-plugins.args
+--- orig/docs/plugins/gst-plugins-bad-plugins.args	2011-05-10 11:34:54.000000000 +0100
++++ new/docs/plugins/gst-plugins-bad-plugins.args	2011-07-05 19:00:51.000000000 +0100
+@@ -46670,7 +46670,7 @@
+ <FLAGS>rw</FLAGS>
+ <NICK>Minimum size height</NICK>
+ <BLURB>Minimum window height size.</BLURB>
+-<DEFAULT>0</DEFAULT>
++<DEFAULT>30</DEFAULT>
+ </ARG>
+ 
+ <ARG>
+@@ -46680,7 +46680,7 @@
+ <FLAGS>rw</FLAGS>
+ <NICK>Minimum size width</NICK>
+ <BLURB>Minimum window width size.</BLURB>
+-<DEFAULT>0</DEFAULT>
++<DEFAULT>30</DEFAULT>
+ </ARG>
+ 
+ <ARG>
+@@ -46690,7 +46690,7 @@
+ <FLAGS>rw</FLAGS>
+ <NICK>Scale factor</NICK>
+ <BLURB>Factor by which the windows is scaled after each scan.</BLURB>
+-<DEFAULT>1.1</DEFAULT>
++<DEFAULT>1.25</DEFAULT>
+ </ARG>
+ 
+ <ARG>
+@@ -46704,6 +46704,46 @@
+ </ARG>
+ 
+ <ARG>
++<NAME>Gstfaceblur::min-neighbors</NAME>
++<TYPE>gint</TYPE>
++<RANGE>>= 0</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Mininum neighbors</NICK>
++<BLURB>Minimum number (minus 1) of neighbor rectangles that makes up an object.</BLURB>
++<DEFAULT>3</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstfaceblur::min-size-height</NAME>
++<TYPE>gint</TYPE>
++<RANGE>>= 0</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Minimum size height</NICK>
++<BLURB>Minimum window height size.</BLURB>
++<DEFAULT>30</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstfaceblur::min-size-width</NAME>
++<TYPE>gint</TYPE>
++<RANGE>>= 0</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Minimum size width</NICK>
++<BLURB>Minimum window width size.</BLURB>
++<DEFAULT>30</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstfaceblur::scale-factor</NAME>
++<TYPE>gdouble</TYPE>
++<RANGE>[1.1,10]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Scale factor</NICK>
++<BLURB>Factor by which the windows is scaled after each scan.</BLURB>
++<DEFAULT>1.25</DEFAULT>
++</ARG>
++
++<ARG>
+ <NAME>Gstedgedetect::aperture</NAME>
+ <TYPE>gint</TYPE>
+ <RANGE>[3,7]</RANGE>
+@@ -47933,3 +47973,343 @@
+ <DEFAULT>"/dev/sditx0"</DEFAULT>
+ </ARG>
+ 
++<ARG>
++<NAME>Gstmotioncells::calculatemotion</NAME>
++<TYPE>gboolean</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Calculate Motion</NICK>
++<BLURB>If needs calculate motion on frame you need this property setting true otherwise false.</BLURB>
++<DEFAULT>TRUE</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::cellscolor</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Color of Motion Cells</NICK>
++<BLURB>The color of motion cells separated with ",".</BLURB>
++<DEFAULT>"255,255,0"</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::datafile</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>DataFile</NICK>
++<BLURB>Location of motioncells data file (empty string means no saving).</BLURB>
++<DEFAULT>""</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::datafileextension</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>DataFile Extension</NICK>
++<BLURB>Extension of datafile.</BLURB>
++<DEFAULT>"vamc"</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::date</NAME>
++<TYPE>glong</TYPE>
++<RANGE>>= 0</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Cell Date</NICK>
++<BLURB>Current Data in milliseconds.</BLURB>
++<DEFAULT>1</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::display</NAME>
++<TYPE>gboolean</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Display</NICK>
++<BLURB>Motion Cells visible or not on Current Frame.</BLURB>
++<DEFAULT>TRUE</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::gap</NAME>
++<TYPE>gint</TYPE>
++<RANGE>[1,60]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>GAP</NICK>
++<BLURB>GAP between clips.</BLURB>
++<DEFAULT>5</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::gridx</NAME>
++<TYPE>gint</TYPE>
++<RANGE>[8,32]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>GRID X</NICK>
++<BLURB>Motion Grid X.</BLURB>
++<DEFAULT>10</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::gridy</NAME>
++<TYPE>gint</TYPE>
++<RANGE>[8,32]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>GRID Y</NICK>
++<BLURB>Motion Grid Y.</BLURB>
++<DEFAULT>10</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::motioncellsidx</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Cells Of Interest(MOCI)</NICK>
++<BLURB>The line and column idx separated with ":", describe a cell. Cells separated with ",".</BLURB>
++<DEFAULT>""</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::motioncellthickness</NAME>
++<TYPE>gint</TYPE>
++<RANGE>[G_MAXULONG,5]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Cell Thickness</NICK>
++<BLURB>Motion Cell Border Thickness, if it's -1 then motion cell will be fill.</BLURB>
++<DEFAULT>1</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::motionmaskcellspos</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Mask with Cells Position</NICK>
++<BLURB>The line and column idx separated with ":" what cells want we mask-out, describe a cell. Cells separated with ",".</BLURB>
++<DEFAULT>""</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::motionmaskcoords</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Mask with Coordinates</NICK>
++<BLURB>The upper left x, y and lower right x, y coordinates separated with ":", describe a region. Regions separated with ",".</BLURB>
++<DEFAULT>""</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::postallmotion</NAME>
++<TYPE>gboolean</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Post All Motion</NICK>
++<BLURB>Element post bus msg for every motion frame or just motion start and motion stop.</BLURB>
++<DEFAULT>FALSE</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::sensitivity</NAME>
++<TYPE>gdouble</TYPE>
++<RANGE>[0,1]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>SENSITIVITY</NICK>
++<BLURB>Motion CELLS SENSITIVITY.</BLURB>
++<DEFAULT>0.5</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::threshold</NAME>
++<TYPE>gdouble</TYPE>
++<RANGE>[0,1]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>THRESHOLD</NICK>
++<BLURB>Threshold of Motion CELLS Number.</BLURB>
++<DEFAULT>0.01</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::usealpha</NAME>
++<TYPE>gboolean</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Use alpha</NICK>
++<BLURB>Use or not alpha blending because it cause flicking on frames, it has some bug.</BLURB>
++<DEFAULT>FALSE</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::calculatemotion</NAME>
++<TYPE>gboolean</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Calculate Motion</NICK>
++<BLURB>If needs calculate motion on frame you need this property setting true otherwise false.</BLURB>
++<DEFAULT>TRUE</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::cellscolor</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Color of Motion Cells</NICK>
++<BLURB>The color of motion cells separated with ",".</BLURB>
++<DEFAULT>"255,255,0"</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::datafile</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>DataFile</NICK>
++<BLURB>Location of motioncells data file (empty string means no saving).</BLURB>
++<DEFAULT>""</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::datafileextension</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>DataFile Extension</NICK>
++<BLURB>Extension of datafile.</BLURB>
++<DEFAULT>"vamc"</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::date</NAME>
++<TYPE>glong</TYPE>
++<RANGE>>= 0</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Cell Date</NICK>
++<BLURB>Current Data in milliseconds.</BLURB>
++<DEFAULT>1</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::display</NAME>
++<TYPE>gboolean</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Display</NICK>
++<BLURB>Motion Cells visible or not on Current Frame.</BLURB>
++<DEFAULT>TRUE</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::gap</NAME>
++<TYPE>gint</TYPE>
++<RANGE>[1,60]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>GAP</NICK>
++<BLURB>GAP between clips.</BLURB>
++<DEFAULT>5</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::gridx</NAME>
++<TYPE>gint</TYPE>
++<RANGE>[8,32]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>GRID X</NICK>
++<BLURB>Motion Grid X.</BLURB>
++<DEFAULT>10</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::gridy</NAME>
++<TYPE>gint</TYPE>
++<RANGE>[8,32]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>GRID Y</NICK>
++<BLURB>Motion Grid Y.</BLURB>
++<DEFAULT>10</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::motioncellsidx</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Cells Of Interest(MOCI)</NICK>
++<BLURB>The line and column idx separated with ":", describe a cell. Cells separated with ",".</BLURB>
++<DEFAULT>""</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::motioncellthickness</NAME>
++<TYPE>gint</TYPE>
++<RANGE>[G_MAXULONG,5]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Cell Thickness</NICK>
++<BLURB>Motion Cell Border Thickness, if it's -1 then motion cell will be fill.</BLURB>
++<DEFAULT>1</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::motionmaskcellspos</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Mask with Cells Position</NICK>
++<BLURB>The line and column idx separated with ":" what cells want we mask-out, describe a cell. Cells separated with ",".</BLURB>
++<DEFAULT>""</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::motionmaskcoords</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Mask with Coordinates</NICK>
++<BLURB>The upper left x, y and lower right x, y coordinates separated with ":", describe a region. Regions separated with ",".</BLURB>
++<DEFAULT>""</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::postallmotion</NAME>
++<TYPE>gboolean</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Post All Motion</NICK>
++<BLURB>Element post bus msg for every motion frame or just motion start and motion stop.</BLURB>
++<DEFAULT>FALSE</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::sensitivity</NAME>
++<TYPE>gdouble</TYPE>
++<RANGE>[0,1]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>SENSITIVITY</NICK>
++<BLURB>Motion CELLS SENSITIVITY.</BLURB>
++<DEFAULT>0.5</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::threshold</NAME>
++<TYPE>gdouble</TYPE>
++<RANGE>[0,1]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>THRESHOLD</NICK>
++<BLURB>Threshold of Motion CELLS Number.</BLURB>
++<DEFAULT>0.01</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>GstMotioncells::usealpha</NAME>
++<TYPE>gboolean</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Use alpha</NICK>
++<BLURB>Use or not alpha blending because it cause flicking on frames, it has some bug.</BLURB>
++<DEFAULT>FALSE</DEFAULT>
++</ARG>
++
+diff -rupN orig/docs/plugins/gst-plugins-bad-plugins.hierarchy new/docs/plugins/gst-plugins-bad-plugins.hierarchy
+--- orig/docs/plugins/gst-plugins-bad-plugins.hierarchy	2011-05-10 11:34:02.000000000 +0100
++++ new/docs/plugins/gst-plugins-bad-plugins.hierarchy	2011-07-05 18:59:41.000000000 +0100
+@@ -193,6 +193,7 @@ GObject
+       GstAmrWbEnc
+       Gstedgedetect
+       Gstfaceblur
++      GstMotioncells
+       Gstpyramidsegment
+       GstTemplateMatch
+       GstOpencvTextOverlay
+diff -rupN orig/ext/opencv/Makefile.am new/ext/opencv/Makefile.am
+--- orig/ext/opencv/Makefile.am	2011-04-08 00:35:37.000000000 +0100
++++ new/ext/opencv/Makefile.am	2011-07-05 18:59:41.000000000 +0100
+@@ -16,7 +16,12 @@ libgstopencv_la_SOURCES = gstopencv.c \
+ 			gstfacedetect.c \
+ 			gstpyramidsegment.c \
+ 			gsttemplatematch.c \
+-			gsttextoverlay.c
++			gsttextoverlay.c \
++			gstmotioncells.c \
++			motioncells_wrapper.cpp \
++			MotionCells.cpp
++
++libgstopencv_la_CXXFLAGS = $(GST_CXXFLAGS) $(OPENCV_CFLAGS)
+ 
+ # flags used to compile this facedetect
+ # add other _CFLAGS and _LIBS as needed
+@@ -46,4 +51,7 @@ noinst_HEADERS = gstopencvvideofilter.h 
+ 		gstfacedetect.h \
+ 		gstpyramidsegment.h \
+ 		gsttemplatematch.h \
+-		gsttextoverlay.h
++		gsttextoverlay.h \
++		gstmotioncells.h \
++		motioncells_wrapper.h \
++		MotionCells.h
+diff -rupN orig/ext/opencv/MotionCells.cpp new/ext/opencv/MotionCells.cpp
+--- orig/ext/opencv/MotionCells.cpp	1970-01-01 01:00:00.000000000 +0100
++++ new/ext/opencv/MotionCells.cpp	2011-07-05 18:59:41.000000000 +0100
+@@ -0,0 +1,565 @@
++/*
++ * MotionCells.cpp
++ *
++ *  Created on: Aug 11, 2010
++ *      Author: Robert Jobbagy
++ *	 	 Email: <jobbagy dot robert at gmail dot com>
++ */
++
++#include <cstdlib>
++#include <errno.h>
++#include <math.h>
++#include <gst/gst.h>
++#include <arpa/inet.h>
++
++#include "MotionCells.h"
++
++extern int instanceCounter;
++
++int cntmotioncells = 0;
++int framecntmotioncells = 0;
++uint64_t ntohl64 (uint64_t val);
++uint64_t htonl64 (uint64_t val);
++
++uint64_t
++ntohl64 (uint64_t val)
++{
++  uint64_t res64;
++  uint32_t low = (uint32_t) (val & 0x00000000FFFFFFFFLL);
++  uint32_t high = (uint32_t) ((val & 0xFFFFFFFF00000000LL) >> 32);
++  low = ntohl (low);
++  high = ntohl (high);
++  res64 = (uint64_t) high + (((uint64_t) low) << 32);
++  return res64;
++}
++
++
++uint64_t
++htonl64 (uint64_t val)
++{
++  uint64_t res64;
++  uint32_t low = (uint32_t) (val & 0x00000000FFFFFFFFLL);
++  uint32_t high = (uint32_t) ((val & 0xFFFFFFFF00000000LL) >> 32);
++  low = htonl (low);
++  high = htonl (high);
++  res64 = (uint64_t) high + (((uint64_t) low) << 32);
++  return res64;
++}
++
++MotionCells::MotionCells ()
++{
++  m_framecnt = 0;
++  m_motioncells_idx_count = 0;
++  m_motioncellsidxcstr = NULL;
++  m_saveInDatafile = false;
++  mc_savefile = NULL;
++  m_initdatafilefailed = new char[BUSMSGLEN];
++  m_savedatafilefailed = new char[BUSMSGLEN];
++  m_initerrorcode = 0;
++  m_saveerrorcode = 0;
++
++}
++
++MotionCells::~MotionCells ()
++{
++  if (mc_savefile) {
++    fclose (mc_savefile);
++    mc_savefile = NULL;
++  }
++  delete[]m_initdatafilefailed;
++  delete[]m_savedatafilefailed;
++}
++
++int
++MotionCells::performDetectionMotionCells (IplImage * p_frame,
++    double p_sensitivity, double p_framerate, int p_gridx, int p_gridy,
++    long int timestamp_millisec, bool p_isVisible, bool p_useAlpha,
++    int motionmaskcoord_count, motionmaskcoordrect * motionmaskcoords,
++    int motionmaskcells_count, motioncellidx * motionmaskcellsidx,
++    cellscolor * motioncellscolor, int motioncells_count,
++    motioncellidx * motioncellsidx, gint64 starttime, char *p_datafile,
++    bool p_changed_datafile, int p_thickness)
++{
++
++  int sumframecnt = 0;
++  int ret = 0;
++  p_framerate >= 1 ? p_framerate <= 5 ? sumframecnt = 1
++      : p_framerate <= 10 ? sumframecnt = 2
++      : p_framerate <= 15 ? sumframecnt = 3
++      : p_framerate <= 20 ? sumframecnt = 4
++      : p_framerate <= 25 ? sumframecnt = 5 : sumframecnt = 0 : sumframecnt = 0;
++
++  m_framecnt++;
++  m_changed_datafile = p_changed_datafile;
++  if (m_framecnt >= sumframecnt) {
++    m_useAlpha = p_useAlpha;
++    m_gridx = p_gridx;
++    m_gridy = p_gridy;
++    if (m_changed_datafile) {
++      ret = initDataFile (p_datafile, starttime);
++      if (ret != 0)
++        return ret;
++    }
++
++    m_frameSize = cvGetSize (p_frame);
++    m_frameSize.width /= 2;
++    m_frameSize.height /= 2;
++    setMotionCells (m_frameSize.width, m_frameSize.height);
++    m_sensitivity = 1 - p_sensitivity;
++    m_isVisible = p_isVisible;
++    m_pcurFrame = cvCloneImage (p_frame);
++    IplImage *m_pmovingAvg = cvCreateImage (m_frameSize, IPL_DEPTH_32F, 1);
++    IplImage *m_pcurgreyImage = cvCreateImage (m_frameSize, IPL_DEPTH_8U, 1);
++    IplImage *m_pprevgreyImage = cvCreateImage (m_frameSize, IPL_DEPTH_8U, 1);
++    IplImage *m_pgreyImage = cvCreateImage (m_frameSize, IPL_DEPTH_8U, 1);
++    IplImage *m_pcurDown =
++        cvCreateImage (m_frameSize, m_pcurFrame->depth, m_pcurFrame->nChannels);
++    IplImage *m_pprevDown = cvCreateImage (m_frameSize, m_pprevFrame->depth,
++        m_pprevFrame->nChannels);
++    m_pbwImage = cvCreateImage (m_frameSize, IPL_DEPTH_8U, 1);
++    cvPyrDown (m_pprevFrame, m_pprevDown);
++    cvCvtColor (m_pprevDown, m_pprevgreyImage, CV_RGB2GRAY);
++    cvConvertScale (m_pprevgreyImage, m_pmovingAvg, 1.0, 0.0);  //convert 8U to 32F
++    cvReleaseImage (&m_pprevFrame);
++    cvPyrDown (m_pcurFrame, m_pcurDown);
++    cvCvtColor (m_pcurDown, m_pcurgreyImage, CV_RGB2GRAY);
++    m_pdifferenceImage = cvCloneImage (m_pcurgreyImage);
++    m_ptemp = cvCloneImage (m_pcurgreyImage);
++    //cvSmooth(m_pcurgreyImage, m_pcurgreyImage, CV_GAUSSIAN, 3, 0);//TODO camera noise reduce,something smoothing, and rethink runningavg weights
++    cvRunningAvg (m_pcurgreyImage, m_pmovingAvg, 0.020, NULL);
++
++    //Convert the scale of the moving average.
++    cvConvertScale (m_pmovingAvg, m_ptemp, 1.0, 0.0);   //convert 32F to 8U
++
++    //Minus the current gray frame from the 8U moving average.
++    cvAbsDiff (m_pcurgreyImage, m_ptemp, m_pdifferenceImage);
++
++    //Convert the image to black and white.
++    cvAdaptiveThreshold (m_pdifferenceImage, m_pbwImage, 255,
++        CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY_INV, 7);
++
++    // Dilate and erode to get object blobs
++    cvDilate (m_pbwImage, m_pbwImage, NULL, 2);
++    cvErode (m_pbwImage, m_pbwImage, NULL, 2);
++
++    //mask-out the overlay on difference image
++    if (motionmaskcoord_count > 0)
++      performMotionMaskCoords (motionmaskcoords, motionmaskcoord_count);
++    if (motionmaskcells_count > 0)
++      performMotionMask (motionmaskcellsidx, motionmaskcells_count);
++    if (getIsNonZero (m_pbwImage)) {    //detect Motion
++      GST_DEBUG ("DETECT MOTION \n");
++      (motioncells_count > 0) ?
++          calculateMotionPercentInMotionCells (motioncellsidx,
++          motioncells_count)
++          : calculateMotionPercentInMotionCells (motionmaskcellsidx, 0);
++
++      IplImage *transparencyimg =
++          cvCreateImage (m_frameSize, p_frame->depth, p_frame->nChannels);
++      cvSetZero (transparencyimg);
++      if (m_motioncellsidxcstr)
++        delete[]m_motioncellsidxcstr;
++      m_motioncells_idx_count = m_MotionCells.size () * MSGLEN; //one motion cell idx: (lin idx : col idx,) it's 4 character except last motion cell idx
++      m_motioncellsidxcstr = new char[m_motioncells_idx_count];
++      char *tmpstr = new char[MSGLEN];
++      for (int i = 0; i < MSGLEN; i++)
++        tmpstr[i] = ' ';
++      for (unsigned int i = 0; i < m_MotionCells.size (); i++) {
++        if (m_useAlpha && m_isVisible)  //FIXME: alpha blending has bug, it needs fix
++        {
++          cvPyrDown (p_frame, transparencyimg);
++          cvRectangle (transparencyimg,
++              m_MotionCells.at (i).cell_pt1,
++              m_MotionCells.at (i).cell_pt2,
++              CV_RGB (motioncellscolor->B_channel_value,
++                  motioncellscolor->G_channel_value,
++                  motioncellscolor->R_channel_value), CV_FILLED);
++        } else if (m_isVisible) {
++          CvPoint pt1, pt2;
++          pt1.x = m_MotionCells.at (i).cell_pt1.x;
++          pt1.x *= 2;
++          pt1.y = m_MotionCells.at (i).cell_pt1.y;
++          pt1.y *= 2;
++          pt2.x = m_MotionCells.at (i).cell_pt2.x;
++          pt2.x *= 2;
++          pt2.y = m_MotionCells.at (i).cell_pt2.y;
++          pt2.y *= 2;
++          cvRectangle (p_frame,
++              pt1,
++              pt2,
++              CV_RGB (motioncellscolor->B_channel_value,
++                  motioncellscolor->G_channel_value,
++                  motioncellscolor->R_channel_value), p_thickness);
++        }
++
++        if (i < m_MotionCells.size () - 1) {
++          snprintf (tmpstr, MSGLEN, "%d:%d,", m_MotionCells.at (i).lineidx,
++              m_MotionCells.at (i).colidx);
++        } else {
++          snprintf (tmpstr, MSGLEN, "%d:%d", m_MotionCells.at (i).lineidx,
++              m_MotionCells.at (i).colidx);
++        }
++        if (i == 0)
++          strncpy (m_motioncellsidxcstr, tmpstr, m_motioncells_idx_count);
++        else
++          strcat (m_motioncellsidxcstr, tmpstr);
++      }
++      if (m_MotionCells.size () == 0)
++        strncpy (m_motioncellsidxcstr, " ", m_motioncells_idx_count);
++
++      if (m_useAlpha && m_isVisible) {  ////FIXME: alpha blending has bug, it needs fix, cells position is wrong position
++        //image split and prepare for transparency image, and finally merge channels
++        IplImage *redchannel = cvCreateImage (m_frameSize, IPL_DEPTH_8U, 1);
++        IplImage *greenchannel = cvCreateImage (m_frameSize, IPL_DEPTH_8U, 1);
++        IplImage *bluechannel = cvCreateImage (m_frameSize, IPL_DEPTH_8U, 1);
++        IplImage *tmpCurFrame = cvCreateImage (m_frameSize, m_pcurFrame->depth,
++            m_pcurFrame->nChannels);
++        cvPyrDown (m_pcurFrame, tmpCurFrame);
++        transparentImage =
++            cvCreateImage (cvGetSize (tmpCurFrame), tmpCurFrame->depth,
++            tmpCurFrame->nChannels);
++        blendImages (tmpCurFrame, transparencyimg, 0.5, 0.5);
++        cvSplit (transparentImage, redchannel, greenchannel, bluechannel, 0);
++        IplImage *sumrednormal =
++            cvCreateImage (cvGetSize (p_frame), IPL_DEPTH_8U, 1);
++        IplImage *sumgreennormal =
++            cvCreateImage (cvGetSize (p_frame), IPL_DEPTH_8U, 1);
++        IplImage *sumbluenormal =
++            cvCreateImage (cvGetSize (p_frame), IPL_DEPTH_8U, 1);
++        cvResize (redchannel, sumrednormal, CV_INTER_CUBIC);
++        cvResize (greenchannel, sumgreennormal, CV_INTER_CUBIC);
++        cvResize (bluechannel, sumbluenormal, CV_INTER_CUBIC);
++        cvMerge (sumrednormal, sumgreennormal, sumbluenormal, 0, p_frame);
++        cvReleaseImage (&redchannel);
++        cvReleaseImage (&greenchannel);
++        cvReleaseImage (&bluechannel);
++        cvReleaseImage (&sumrednormal);
++        cvReleaseImage (&sumgreennormal);
++        cvReleaseImage (&sumbluenormal);
++        cvReleaseImage (&tmpCurFrame);
++        cvReleaseImage (&transparentImage);
++      }
++      cvReleaseImage (&transparencyimg);
++      delete[]tmpstr;
++
++      if (mc_savefile && m_saveInDatafile) {
++        ret = saveMotionCells (timestamp_millisec);
++        if (ret != 0)
++          return ret;
++      }
++    }
++
++    framecntmotioncells++;
++    m_pprevFrame = cvCloneImage (m_pcurFrame);
++    m_framecnt = 0;
++    cvReleaseImage (&m_pcurFrame);
++    cvReleaseImage (&m_pdifferenceImage);
++    cvReleaseImage (&m_pcurgreyImage);
++    cvReleaseImage (&m_pprevgreyImage);
++    cvReleaseImage (&m_ptemp);
++    cvReleaseImage (&m_pmovingAvg);
++    cvReleaseImage (&m_pgreyImage);
++    cvReleaseImage (&m_pbwImage);
++    cvReleaseImage (&m_pprevDown);
++    cvReleaseImage (&m_pcurDown);
++    for (int i = 0; i < m_gridy; ++i) {
++      delete[]m_pCells[i];
++    }
++    delete[]m_pCells;
++
++    m_MotionCells.clear ();
++  }
++  return ret;
++}
++
++int
++MotionCells::initDataFile (char *p_datafile, gint64 starttime)  //p_date is increased with difference between current and previous buffer ts
++{
++  MotionCellData mcd;
++  if (strncmp (p_datafile, " ", 1)) {
++    mc_savefile = fopen (p_datafile, "w");
++    if (mc_savefile == NULL) {
++      //fprintf(stderr, "%s %d:initDataFile:fopen:%d (%s)\n", __FILE__, __LINE__, errno,
++      //strerror(errno));
++      strncpy (m_initdatafilefailed, strerror (errno), BUSMSGLEN - 1);
++      m_initerrorcode = errno;
++      return 1;
++    } else {
++      m_saveInDatafile = true;
++    }
++  } else
++    mc_savefile = NULL;
++  bzero (&m_header, sizeof (MotionCellHeader));
++  m_header.headersize = htonl (MC_HEADER);
++  m_header.type = htonl (MC_TYPE);
++  m_header.version = htonl (MC_VERSION);
++  //it needs these bytes
++  m_header.itemsize =
++      htonl ((int) ceil (ceil (m_gridx * m_gridy / 8.0) / 4.0) * 4 +
++      sizeof (mcd.timestamp));
++  m_header.gridx = htonl (m_gridx);
++  m_header.gridy = htonl (m_gridy);
++  m_header.starttime = htonl64 (starttime);
++
++  snprintf (m_header.name, sizeof (m_header.name), "%s %dx%d", MC_VERSIONTEXT,
++      ntohl (m_header.gridx), ntohl (m_header.gridy));
++  m_changed_datafile = false;
++  return 0;
++}
++
++int
++MotionCells::saveMotionCells (long int timestamp_millisec)
++{
++
++  MotionCellData mc_data;
++  mc_data.timestamp = htonl (timestamp_millisec);
++  mc_data.data = NULL;
++  //There is no datafile
++  if (mc_savefile == NULL)
++    return 0;
++
++  if (ftello (mc_savefile) == 0) {
++    //cerr << "Writing out file header"<< m_header.headersize <<":" << sizeof(MotionCellHeader) << " itemsize:"
++    //<< m_header.itemsize << endl;
++    if (fwrite (&m_header, sizeof (MotionCellHeader), 1, mc_savefile) != 1) {
++      //fprintf(stderr, "%s %d:saveMotionCells:fwrite:%d (%s)\n", __FILE__, __LINE__, errno,
++      //strerror(errno));
++      strncpy (m_savedatafilefailed, strerror (errno), BUSMSGLEN - 1);
++      m_saveerrorcode = errno;
++      return -1;
++    }
++  }
++
++  mc_data.data =
++      (char *) calloc (1,
++      ntohl (m_header.itemsize) - sizeof (mc_data.timestamp));
++  if (mc_data.data == NULL) {
++    //fprintf(stderr, "%s %d:saveMotionCells:calloc:%d (%s)\n", __FILE__, __LINE__, errno,
++    //strerror(errno));
++    strncpy (m_savedatafilefailed, strerror (errno), BUSMSGLEN - 1);
++    m_saveerrorcode = errno;
++    return -1;
++  }
++
++  for (unsigned int i = 0; i < m_MotionCells.size (); i++) {
++    int bitnum =
++        m_MotionCells.at (i).lineidx * ntohl (m_header.gridx) +
++        m_MotionCells.at (i).colidx;
++    int bytenum = (int) floor (bitnum / 8.0);
++    int shift = bitnum - bytenum * 8;
++    mc_data.data[bytenum] = mc_data.data[bytenum] | (1 << shift);
++    //cerr << "Motion Detected " <<  "line:" << m_MotionCells.at(i).lineidx << " col:" << m_MotionCells.at(i).colidx;
++    //cerr << "    bitnum " << bitnum << " bytenum " << bytenum << " shift " << shift << " value " << (int)mc_data.data[bytenum] << endl;
++  }
++
++  if (fwrite (&mc_data.timestamp, sizeof (mc_data.timestamp), 1,
++          mc_savefile) != 1) {
++    //fprintf(stderr, "%s %d:saveMotionCells:fwrite:%d (%s)\n", __FILE__, __LINE__, errno,
++    //strerror(errno));
++    strncpy (m_savedatafilefailed, strerror (errno), BUSMSGLEN - 1);
++    m_saveerrorcode = errno;
++    return -1;
++  }
++
++  if (fwrite (mc_data.data,
++          ntohl (m_header.itemsize) - sizeof (mc_data.timestamp), 1,
++          mc_savefile) != 1) {
++    //fprintf(stderr, "%s %d:saveMotionCells:fwrite:%d (%s)\n", __FILE__, __LINE__, errno,
++    //strerror(errno));
++    strncpy (m_savedatafilefailed, strerror (errno), BUSMSGLEN - 1);
++    m_saveerrorcode = errno;
++    return -1;
++  }
++
++  free (mc_data.data);
++  return 0;
++}
++
++double
++MotionCells::calculateMotionPercentInCell (int p_row, int p_col,
++    double *p_cellarea, double *p_motionarea, int *p_endx, int *p_endy)
++{
++  double cntpixelsnum = 0;
++  double cntmotionpixelnum = 0;
++  *p_cellarea = 0;
++
++  int ybegin = floor ((double) p_row * m_cellheight);
++  int yend = floor ((double) (p_row + 1) * m_cellheight);
++  int xbegin = floor ((double) (p_col) * m_cellwidth);
++  int xend = floor ((double) (p_col + 1) * m_cellwidth);
++  int cellw = xend - xbegin;
++  int cellh = yend - ybegin;
++  int cellarea = cellw * cellh;
++  int thresholdmotionpixelnum = floor (cellarea * m_sensitivity);
++  if (p_row > 0) {
++    ybegin++;
++  }
++  if (p_col > 0) {
++    xbegin++;
++  }
++  for (int i = ybegin; i < yend; i++) {
++    for (int j = xbegin; j < xend; j++) {
++      cntpixelsnum++;
++      if ((((uchar *) (m_pbwImage->imageData + m_pbwImage->widthStep * i))[j]) >
++          0) {
++        cntmotionpixelnum++;
++        if (cntmotionpixelnum >= thresholdmotionpixelnum) {     //we dont needs calculate anymore
++          return cntmotionpixelnum;
++        }
++      }
++      int remainingpixelsnum = cellarea - cntpixelsnum;
++      if ((cntmotionpixelnum + remainingpixelsnum) < thresholdmotionpixelnum) { //moving pixels number will be less than threshold
++        return 0;
++      }
++    }
++  }
++  *p_endx = xend;
++  *p_endy = yend;
++
++
++  *p_cellarea = cntpixelsnum;
++  *p_motionarea = cntmotionpixelnum;
++  return (cntmotionpixelnum / cntpixelsnum);
++}
++
++void
++MotionCells::calculateMotionPercentInMotionCells (motioncellidx *
++    p_motioncellsidx, int p_motioncells_count)
++{
++  if (p_motioncells_count == 0) {
++    for (int i = 0; i < m_gridy; ++i) {
++      for (int j = 0; j < m_gridx; ++j) {
++        int endx = 0;
++        int endy = 0;
++        m_pCells[i][j].MotionPercent = calculateMotionPercentInCell (i, j,
++            &m_pCells[i][j].CellArea, &m_pCells[i][j].MotionArea, &endx, &endy);
++        m_pCells[i][j].hasMotion =
++            m_sensitivity <= m_pCells[i][j].MotionPercent ? true : false;
++        if (m_pCells[i][j].hasMotion) {
++          MotionCellsIdx mci;
++          mci.lineidx = i;
++          mci.colidx = j;
++          mci.cell_pt1.x = floor ((double) j * m_cellwidth);
++          mci.cell_pt1.y = floor ((double) i * m_cellheight);
++          mci.cell_pt2.x = floor ((double) (j + 1) * m_cellwidth);
++          mci.cell_pt2.y = floor ((double) (i + 1) * m_cellheight);
++          int w = mci.cell_pt2.x - mci.cell_pt1.x;
++          int h = mci.cell_pt2.y - mci.cell_pt1.y;
++          mci.motioncell = cvRect (mci.cell_pt1.x, mci.cell_pt1.y, w, h);
++          m_MotionCells.push_back (mci);
++        }
++      }
++    }
++  } else {
++    for (int k = 0; k < p_motioncells_count; ++k) {
++
++      int endx = 0;
++      int endy = 0;
++      int i = p_motioncellsidx[k].lineidx;
++      int j = p_motioncellsidx[k].columnidx;
++      m_pCells[p_motioncellsidx[k].lineidx][p_motioncellsidx[k].columnidx].
++          MotionPercent =
++          calculateMotionPercentInCell (i, j,
++          &m_pCells[p_motioncellsidx[k].lineidx][p_motioncellsidx[k].columnidx].
++          CellArea,
++          &m_pCells[p_motioncellsidx[k].lineidx][p_motioncellsidx[k].columnidx].
++          MotionArea, &endx, &endy);
++      m_pCells[p_motioncellsidx[k].lineidx][p_motioncellsidx[k].columnidx].
++          hasMotion =
++          m_pCells[p_motioncellsidx[k].lineidx][p_motioncellsidx[k].columnidx].
++          MotionPercent > m_sensitivity ? true : false;
++      if (m_pCells[p_motioncellsidx[k].lineidx][p_motioncellsidx[k].columnidx].
++          hasMotion) {
++        MotionCellsIdx mci;
++        mci.lineidx = p_motioncellsidx[k].lineidx;
++        mci.colidx = p_motioncellsidx[k].columnidx;
++        mci.cell_pt1.x = floor ((double) j * m_cellwidth);
++        mci.cell_pt1.y = floor ((double) i * m_cellheight);
++        mci.cell_pt2.x = floor ((double) (j + 1) * m_cellwidth);
++        mci.cell_pt2.y = floor ((double) (i + 1) * m_cellheight);
++        int w = mci.cell_pt2.x - mci.cell_pt1.x;
++        int h = mci.cell_pt2.y - mci.cell_pt1.y;
++        mci.motioncell = cvRect (mci.cell_pt1.x, mci.cell_pt1.y, w, h);
++        m_MotionCells.push_back (mci);
++      }
++    }
++  }
++}
++
++void
++MotionCells::performMotionMaskCoords (motionmaskcoordrect * p_motionmaskcoords,
++    int p_motionmaskcoords_count)
++{
++  CvPoint upperleft;
++  upperleft.x = 0;
++  upperleft.y = 0;
++  CvPoint lowerright;
++  lowerright.x = 0;
++  lowerright.y = 0;
++  for (int i = 0; i < p_motionmaskcoords_count; i++) {
++    upperleft.x = p_motionmaskcoords[i].upper_left_x;
++    upperleft.y = p_motionmaskcoords[i].upper_left_y;
++    lowerright.x = p_motionmaskcoords[i].lower_right_x;
++    lowerright.y = p_motionmaskcoords[i].lower_right_y;
++    cvRectangle (m_pbwImage, upperleft, lowerright, CV_RGB (0, 0, 0),
++        CV_FILLED);
++  }
++}
++
++void
++MotionCells::performMotionMask (motioncellidx * p_motionmaskcellsidx,
++    int p_motionmaskcells_count)
++{
++  for (int k = 0; k < p_motionmaskcells_count; k++) {
++    int beginy = p_motionmaskcellsidx[k].lineidx * m_cellheight;
++    int beginx = p_motionmaskcellsidx[k].columnidx * m_cellwidth;
++    int endx = beginx + m_cellwidth;
++    int endy = beginy + m_cellheight;
++    for (int i = beginy; i < endy; i++)
++      for (int j = beginx; j < endx; j++) {
++        ((uchar *) (m_pbwImage->imageData + m_pbwImage->widthStep * i))[j] = 0;
++      }
++  }
++}
++
++void
++MotionCells::blendImages (IplImage * p_actFrame, IplImage * p_rectFrame,
++    float p_alpha, float p_beta)
++{
++  CvSize actFrameSize = cvGetSize (p_actFrame);
++  CvSize rectFrameSize = cvGetSize (p_rectFrame);
++  if (actFrameSize.height != rectFrameSize.height &&
++      actFrameSize.width != rectFrameSize.width)
++    throw "not the same size";
++
++  IplImage *greyImage = cvCreateImage (cvGetSize (p_actFrame), IPL_DEPTH_8U, 1);
++
++  cvCvtColor (p_rectFrame, greyImage, CV_BGR2GRAY);
++
++  int height = p_actFrame->height;
++  int width = p_actFrame->width;
++  int step = p_actFrame->widthStep;
++  int greyStep = greyImage->widthStep;
++  int channels = p_actFrame->nChannels;
++  uchar *curImageData = (uchar *) p_actFrame->imageData;
++  uchar *recImageData = (uchar *) p_rectFrame->imageData;
++  uchar *transImageData = (uchar *) transparentImage->imageData;
++  uchar *greyImageData = (uchar *) greyImage->imageData;
++
++
++  for (int i = 0; i < height; i++)
++    for (int j = 0; j < width; j++)
++      for (int k = 0; k < channels; k++) {
++        if (greyImageData[i * greyStep + j] != 0) {
++          uchar curImgValue = curImageData[i * step + j * channels + k];
++          uchar recImgValue = recImageData[i * step + j * channels + k];
++          uchar transImgValue = (uchar) (curImgValue * p_alpha +
++              recImgValue * p_beta);
++          transImageData[i * step + j * channels + k] = transImgValue;
++        } else {
++          transImageData[i * step + j * channels + k] =
++              curImageData[i * step + j * channels + k];
++        }
++      }
++  cvReleaseImage (&greyImage);
++}
+diff -rupN orig/ext/opencv/MotionCells.h new/ext/opencv/MotionCells.h
+--- orig/ext/opencv/MotionCells.h	1970-01-01 01:00:00.000000000 +0100
++++ new/ext/opencv/MotionCells.h	2011-07-05 18:59:41.000000000 +0100
+@@ -0,0 +1,181 @@
++/*
++ * MotionDetection.h
++ *
++ *  Created on: Aug 11, 2010
++ *      Author: Robert Jobbagy
++ *		 Email: <jobbagy dot robert at gmail dot com>
++ */
++
++#ifndef MOTIONCELLS_H_
++#define MOTIONCELLS_H_
++
++#include <cv.h>                 // includes OpenCV definitions
++#include <highgui.h>            // includes highGUI definitions
++#include <iostream>
++#include <fstream>
++#include <vector>
++#include <cstdio>
++#include <cmath>
++
++#include "analitics.h"
++
++using namespace std;
++
++struct Cell
++{
++  double MotionArea;
++  double CellArea;
++  double MotionPercent;
++  bool hasMotion;
++};
++
++struct MotionCellsIdx
++{
++  CvRect motioncell;
++  //Points for the edges of the rectangle.
++  CvPoint cell_pt1;
++  CvPoint cell_pt2;
++  int lineidx;
++  int colidx;
++};
++
++struct OverlayRegions
++{
++  CvPoint upperleft;
++  CvPoint lowerright;
++};
++
++class MotionCells
++{
++public:
++
++  MotionCells ();
++  virtual ~ MotionCells ();
++
++  int performDetectionMotionCells (IplImage * p_frame, double p_sensitivity,
++      double p_framerate, int p_gridx, int p_gridy, long int timestamp_millisec,
++      bool p_isVisble, bool p_useAlpha, int motionmaskcoord_count,
++      motionmaskcoordrect * motionmaskcoords, int motionmaskcells_count,
++      motioncellidx * motionmaskcellsidx, cellscolor * motioncellscolor,
++      int motioncells_count, motioncellidx * motioncellsidx, gint64 starttime,
++      char *datafile, bool p_changed_datafile, int p_thickness);
++
++  void setPrevFrame (IplImage * p_prevframe)
++  {
++    m_pprevFrame = cvCloneImage (p_prevframe);
++  }
++  char *getMotionCellsIdx ()
++  {
++    return m_motioncellsidxcstr;
++  }
++
++  int getMotionCellsIdxCount ()
++  {
++    return m_motioncells_idx_count;
++  }
++
++  bool getChangedDataFile ()
++  {
++    return m_changed_datafile;
++  }
++
++  char *getDatafileInitFailed ()
++  {
++    return m_initdatafilefailed;
++  }
++
++  char *getDatafileSaveFailed ()
++  {
++    return m_savedatafilefailed;
++  }
++
++  int getInitErrorCode ()
++  {
++    return m_initerrorcode;
++  }
++
++  int getSaveErrorCode ()
++  {
++    return m_saveerrorcode;
++  }
++
++  void freeDataFile ()
++  {
++    if (mc_savefile) {
++      fclose (mc_savefile);
++      mc_savefile = NULL;
++      m_saveInDatafile = false;
++    }
++  }
++
++private:
++
++  double calculateMotionPercentInCell (int p_row, int p_col, double *p_cellarea,
++      double *p_motionarea, int *p_endx, int *p_endy);
++  void performMotionMaskCoords (motionmaskcoordrect * p_motionmaskcoords,
++      int p_motionmaskcoords_count);
++  void performMotionMask (motioncellidx * p_motionmaskcellsidx,
++      int p_motionmaskcells_count);
++  void calculateMotionPercentInMotionCells (motioncellidx *
++      p_motionmaskcellsidx, int p_motionmaskcells_count = 0);
++  int saveMotionCells (long int timestamp_millisec);
++  int initDataFile (char *p_datafile, gint64 starttime);
++  void blendImages (IplImage * p_actFrame, IplImage * p_rectFrame,
++      float p_alpha, float p_beta);
++
++  void setData (IplImage * img, int lin, int col, uchar valor)
++  {
++    ((uchar *) (img->imageData + img->widthStep * lin))[col] = valor;
++  }
++
++  uchar getData (IplImage * img, int lin, int col)
++  {
++    return ((uchar *) (img->imageData + img->widthStep * lin))[col];
++  }
++
++  bool getIsNonZero (IplImage * img)
++  {
++    for (int lin = 0; lin < img->height; lin++)
++      for (int col = 0; col < img->width; col++) {
++        if ((((uchar *) (img->imageData + img->widthStep * lin))[col]) > 0)
++          return true;
++      }
++    return false;
++  }
++
++  void setMotionCells (int p_frameWidth, int p_frameHeight)
++  {
++    m_cellwidth = (double) p_frameWidth / (double) m_gridx;
++    m_cellheight = (double) p_frameHeight / (double) m_gridy;
++    m_pCells = new Cell *[m_gridy];
++    for (int i = 0; i < m_gridy; i++)
++      m_pCells[i] = new Cell[m_gridx];
++
++    //init cells
++    for (int i = 0; i < m_gridy; i++)
++      for (int j = 0; j < m_gridx; j++) {
++        m_pCells[i][j].MotionArea = 0;
++        m_pCells[i][j].CellArea = 0;
++        m_pCells[i][j].MotionPercent = 0;
++        m_pCells[i][j].hasMotion = false;
++      }
++  }
++
++  IplImage *m_pcurFrame, *m_pprevFrame, *m_pdifferenceImage, *m_ptemp,
++      *m_pbwImage, *transparentImage;
++  CvSize m_frameSize;
++  bool m_isVisible, m_changed_datafile, m_useAlpha, m_saveInDatafile;
++  Cell **m_pCells;
++  vector < MotionCellsIdx > m_MotionCells;
++  vector < OverlayRegions > m_OverlayRegions;
++  int m_gridx, m_gridy;
++  double m_cellwidth, m_cellheight;
++  double m_thresholdBoundingboxArea, m_cellArea, m_sensitivity;
++  int m_framecnt, m_motioncells_idx_count, m_initerrorcode, m_saveerrorcode;
++  char *m_motioncellsidxcstr, *m_initdatafilefailed, *m_savedatafilefailed;
++  FILE *mc_savefile;
++  MotionCellHeader m_header;
++
++};
++
++#endif /* MOTIONCELLS_H_ */
+diff -rupN orig/ext/opencv/analitics.h new/ext/opencv/analitics.h
+--- orig/ext/opencv/analitics.h	1970-01-01 01:00:00.000000000 +0100
++++ new/ext/opencv/analitics.h	2011-07-05 18:59:41.000000000 +0100
+@@ -0,0 +1,47 @@
++#ifndef ANALITICS_H_
++#define ANALITICS_H_
++
++#include <glib.h>
++
++//MotionCells defines
++#define MC_HEADER 64
++#define MC_TYPE 1
++#define MC_VERSION 1
++#define MC_VERSIONTEXT "MotionCells-1"
++#define MSGLEN 6
++#define BUSMSGLEN 20
++
++struct MotionCellHeader{
++	gint32 headersize;
++	gint32 type;
++	gint32 version;
++	gint32 itemsize;
++	gint32 gridx;
++	gint32 gridy;
++	gint64 starttime;
++	char name[MC_HEADER - 32];
++};
++
++struct MotionCellData{
++	gint32 timestamp;
++	char *data;
++};
++
++typedef struct {
++	int upper_left_x;
++	int upper_left_y;
++	int lower_right_x;
++	int lower_right_y;
++} motionmaskcoordrect;
++
++typedef struct {
++	int R_channel_value;
++	int G_channel_value;
++	int B_channel_value;
++} cellscolor;
++
++typedef struct {
++	int lineidx;
++	int columnidx;
++} motioncellidx;
++#endif /* ANALITICS_H_ */
+diff -rupN orig/ext/opencv/gstmotioncells.c new/ext/opencv/gstmotioncells.c
+--- orig/ext/opencv/gstmotioncells.c	1970-01-01 01:00:00.000000000 +0100
++++ new/ext/opencv/gstmotioncells.c	2011-07-05 18:59:41.000000000 +0100
+@@ -0,0 +1,976 @@
++/*
++ * GStreamer
++ * Copyright (C) 2011 Robert Jobbagy <jobbagy.robert@gmail.com>
++ * 
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++ * DEALINGS IN THE SOFTWARE.
++ *
++ * Alternatively, the contents of this file may be used under the
++ * GNU Lesser General Public License Version 2.1 (the "LGPL"), in
++ * which case the following provisions apply instead of the ones
++ * mentioned above:
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++#ifdef HAVE_CONFIG_H
++#  include <config.h>
++#endif
++
++#include <string.h>
++#include "gstmotioncells.h"
++#include "motioncells_wrapper.h"
++#include <sys/time.h>
++#include <time.h>
++#include <limits.h>
++
++GST_DEBUG_CATEGORY_STATIC (gst_motion_cells_debug);
++#define GST_CAT_DEFAULT gst_motion_cells_debug
++
++#define GRID_DEF 10
++#define GRID_MIN 8
++#define GRID_MAX 32
++#define SENSITIVITY_DEFAULT 0.5
++#define SENSITIVITY_MIN 0
++#define SENSITIVITY_MAX 1
++#define THRESHOLD_MIN 0
++#define THRESHOLD_DEFAULT 0.01
++#define THRESHOLD_MAX 1.0
++#define GAP_MIN 1
++#define GAP_DEF 5
++#define GAP_MAX 60
++#define POST_NO_MOTION_MIN 0
++#define POST_NO_MOTION_DEF 0
++#define POST_NO_MOTION_MAX 180
++#define THICKNESS_MIN -1
++#define THICKNESS_DEF 1
++#define THICKNESS_MAX 5
++#define DATE_MIN 0
++#define DATE_DEF 1
++#define DATE_MAX LONG_MAX
++#define DEF_DATAFILEEXT "vamc"
++
++int instanceCounter = 0;
++
++/* Filter signals and args */
++enum
++{
++  /* FILL ME */
++  LAST_SIGNAL
++};
++
++enum
++{
++  PROP_0,
++  PROP_GRID_X,
++  PROP_GRID_Y,
++  PROP_SENSITIVITY,
++  PROP_THRESHOLD,
++  PROP_DISPLAY,
++  PROP_DATE,
++  PROP_DATAFILE,
++  PROP_DATAFILE_EXT,
++  PROP_MOTIONMASKCOORD,
++  PROP_MOTIONMASKCELLSPOS,
++  PROP_CELLSCOLOR,
++  PROP_MOTIONCELLSIDX,
++  PROP_GAP,
++  PROP_POSTNOMOTION, 	
++  PROP_CALCULATEMOTION,
++  PROP_POSTALLMOTION,
++  PROP_USEALPHA,
++  PROP_MOTIONCELLTHICKNESS
++};
++
++/* the capabilities of the inputs and outputs.
++ */
++static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
++    GST_PAD_SINK, GST_PAD_ALWAYS, GST_STATIC_CAPS ("video/x-raw-rgb"));
++
++static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
++    GST_PAD_SRC, GST_PAD_ALWAYS, GST_STATIC_CAPS ("video/x-raw-rgb"));
++
++GST_BOILERPLATE (GstMotioncells, gst_motion_cells, GstElement,
++    GST_TYPE_ELEMENT);
++
++static void gst_motion_cells_set_property (GObject * object, guint prop_id,
++    const GValue * value, GParamSpec * pspec);
++static void gst_motion_cells_get_property (GObject * object, guint prop_id,
++    GValue * value, GParamSpec * pspec);
++
++static gboolean gst_motion_cells_set_caps (GstPad * pad, GstCaps * caps);
++static GstFlowReturn gst_motion_cells_chain (GstPad * pad, GstBuffer * buf);
++
++/* Clean up */
++static void
++gst_motion_cells_finalize (GObject * obj)
++{
++  GstMotioncells *filter = gst_motion_cells (obj);
++
++  motion_cells_free (filter->id);
++
++  //freeing previously allocated overlay region array
++  if (filter->motionmaskcoord_count > 0) {
++    g_free (filter->motionmaskcoords);
++  }
++
++  if (filter->motionmaskcells_count > 0) {
++    g_free (filter->motionmaskcellsidx);
++  }
++  if (filter->motioncells_count > 0) {
++    g_free (filter->motioncellsidx);
++  }
++
++  if (filter->cvImage) {
++    cvReleaseImage (&filter->cvImage);
++  }
++
++  if (filter->prev_datafile)
++    g_free (filter->prev_datafile);
++  if (filter->cur_datafile)
++    g_free (filter->cur_datafile);
++  if (filter->basename_datafile)
++    g_free (filter->basename_datafile);
++  if (filter->datafile_extension)
++    g_free (filter->datafile_extension);
++  g_free (filter->motioncellscolor);
++
++  g_mutex_free (filter->changed_datafile_mutex);
++
++  G_OBJECT_CLASS (parent_class)->finalize (obj);
++}
++
++/* GObject vmethod implementations */
++static void
++gst_motion_cells_base_init (gpointer gclass)
++{
++  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
++
++  gst_element_class_set_details_simple (element_class,
++      "motioncells",
++      "Filter/Effect/Video",
++      "Performs motion detection on videos and images, providing detected motion cells index via bus messages",
++      "Robert Jobbagy <jobbagy dot robert at gmail dot com>");
++
++  gst_element_class_add_pad_template (element_class,
++      gst_static_pad_template_get (&src_factory));
++  gst_element_class_add_pad_template (element_class,
++      gst_static_pad_template_get (&sink_factory));
++}
++
++/* initialize the motioncells's class */
++static void
++gst_motion_cells_class_init (GstMotioncellsClass * klass)
++{
++  GObjectClass *gobject_class;
++  GstElementClass *gstelement_class;
++
++  gobject_class = (GObjectClass *) klass;
++  gstelement_class = (GstElementClass *) klass;
++  parent_class = g_type_class_peek_parent (klass);
++
++  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_motion_cells_finalize);
++  gobject_class->set_property = gst_motion_cells_set_property;
++  gobject_class->get_property = gst_motion_cells_get_property;
++
++  g_object_class_install_property (gobject_class, PROP_GRID_X,
++      g_param_spec_int ("gridx", "GRID X", "Motion Grid X", GRID_MIN,
++          GRID_MAX, GRID_DEF, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_GRID_Y,
++      g_param_spec_int ("gridy", "GRID Y", "Motion Grid Y", GRID_MIN,
++          GRID_MAX, GRID_DEF, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_SENSITIVITY,
++      g_param_spec_double ("sensitivity", "SENSITIVITY",
++          "Motion CELLS SENSITIVITY", SENSITIVITY_MIN,
++          SENSITIVITY_MAX, SENSITIVITY_DEFAULT,
++          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_THRESHOLD,
++      g_param_spec_double ("threshold", "THRESHOLD",
++          "Threshold of Motion CELLS Number", THRESHOLD_MIN, THRESHOLD_MAX,
++          THRESHOLD_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_GAP,
++      g_param_spec_int ("gap", "GAP", "GAP between clips", GAP_MIN, GAP_MAX,
++          GAP_DEF, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_POSTNOMOTION,
++      g_param_spec_int ("postnomotion", "POSTNOMOTION", 
++          "If non 0 post a no_motion event is posted on the bus if no motion is detected for N seconds", 
++          POST_NO_MOTION_MIN, POST_NO_MOTION_MAX,
++          POST_NO_MOTION_DEF, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_DISPLAY,
++      g_param_spec_boolean ("display", "Display",
++          "Motion Cells visible or not on Current Frame", TRUE,
++          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_POSTALLMOTION,
++      g_param_spec_boolean ("postallmotion", "Post All Motion",
++          "Element post bus msg for every motion frame or just motion start and motion stop",
++          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_USEALPHA,
++      g_param_spec_boolean ("usealpha", "Use alpha",
++          "Use or not alpha blending because it cause flicking on frames, it has some bug",
++          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_DATE,
++      g_param_spec_long ("date", "Motion Cell Date",
++          "Current Data in milliseconds", DATE_MIN, DATE_MAX, DATE_DEF,
++          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_DATAFILE,
++      g_param_spec_string ("datafile", "DataFile",
++          "Location of motioncells data file (empty string means no saving)",
++          "", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_DATAFILE_EXT,
++      g_param_spec_string ("datafileextension", "DataFile Extension",
++          "Extension of datafile", DEF_DATAFILEEXT,
++          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_MOTIONMASKCOORD,
++      g_param_spec_string ("motionmaskcoords", "Motion Mask with Coordinates",
++          "The upper left x, y and lower right x, y coordinates separated with \":\", "
++          "describe a region. Regions separated with \",\"", "",
++          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_MOTIONMASKCELLSPOS,
++      g_param_spec_string ("motionmaskcellspos",
++          "Motion Mask with Cells Position",
++          "The line and column idx separated with \":\" what cells want we mask-out, "
++          "describe a cell. Cells separated with \",\"", "",
++          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_CELLSCOLOR,
++      g_param_spec_string ("cellscolor", "Color of Motion Cells",
++          "The color of motion cells separated with \",\"", "255,255,0",
++          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_MOTIONCELLSIDX,
++      g_param_spec_string ("motioncellsidx", "Motion Cells Of Interest(MOCI)",
++          "The line and column idx separated with \":\", "
++          "describe a cell. Cells separated with \",\"", "",
++          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_CALCULATEMOTION,
++      g_param_spec_boolean ("calculatemotion", "Calculate Motion",
++          "If needs calculate motion on frame you need this property setting true otherwise false",
++          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++  g_object_class_install_property (gobject_class, PROP_MOTIONCELLTHICKNESS,
++      g_param_spec_int ("motioncellthickness", "Motion Cell Thickness",
++          "Motion Cell Border Thickness, if it's -1 then motion cell will be fill",
++          THICKNESS_MIN, THICKNESS_MAX, THICKNESS_DEF,
++          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
++}
++
++/* initialize the new element
++ * instantiate pads and add them to element
++ * set pad callback functions
++ * initialize instance structure
++ */
++static void
++gst_motion_cells_init (GstMotioncells * filter, GstMotioncellsClass * gclass)
++{
++  filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
++  gst_pad_set_setcaps_function (filter->sinkpad,
++      GST_DEBUG_FUNCPTR (gst_motion_cells_set_caps));
++  gst_pad_set_getcaps_function (filter->sinkpad,
++      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
++  gst_pad_set_chain_function (filter->sinkpad,
++      GST_DEBUG_FUNCPTR (gst_motion_cells_chain));
++
++  filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
++  gst_pad_set_getcaps_function (filter->srcpad,
++      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
++
++  gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
++  gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
++  filter->display = TRUE;
++  filter->calculate_motion = TRUE;
++
++  filter->prevgridx = 0;
++  filter->prevgridy = 0;
++  filter->gridx = GRID_DEF;
++  filter->gridy = GRID_DEF;
++  filter->gap = GAP_DEF;
++  filter->postnomotion = POST_NO_MOTION_DEF;
++
++  filter->prev_datafile = g_strdup (" ");
++  filter->cur_datafile = g_strdup (" ");
++  filter->basename_datafile = g_strdup (" ");
++  filter->datafile_extension = g_strdup (DEF_DATAFILEEXT);
++  filter->sensitivity = SENSITIVITY_DEFAULT;
++  filter->threshold = THRESHOLD_DEFAULT;
++
++  filter->motionmaskcoord_count = 0;
++  filter->motionmaskcoords = NULL;
++  filter->motionmaskcells_count = 0;
++  filter->motionmaskcellsidx = NULL;
++  filter->motioncellscolor = (cellscolor *) g_malloc (sizeof (cellscolor));
++  filter->motioncellscolor->R_channel_value = 255;
++  filter->motioncellscolor->G_channel_value = 255;
++  filter->motioncellscolor->B_channel_value = 0;
++  filter->motioncellsidx = NULL;
++  filter->motioncells_count = 0;
++  filter->motion_begin_timestamp = 0;
++  filter->last_motion_timestamp = 0;
++  filter->last_nomotion_notified = 0;
++  filter->motion_timestamp = 0;
++  filter->prev_buff_timestamp = 0;
++  filter->cur_buff_timestamp = 0;
++  filter->diff_timestamp = -1;
++  gettimeofday (&filter->tv, NULL);
++  filter->starttime = 1000 * filter->tv.tv_sec;
++  filter->previous_motion = false;
++  filter->changed_datafile = false;
++  filter->changed_datafile_mutex = g_mutex_new ();
++  filter->postallmotion = false;
++  filter->usealpha = false;
++  filter->firstdatafile = false;
++  filter->firstgridx = true;
++  filter->firstgridy = true;
++  filter->changed_gridx = false;
++  filter->changed_gridy = false;
++  filter->firstframe = true;
++  filter->changed_startime = false;
++  filter->sent_init_error_msg = false;
++  filter->sent_save_error_msg = false;
++  filter->thickness = THICKNESS_DEF;
++
++  filter->datafileidx = 0;
++  filter->id = instanceCounter;
++  motion_cells_init ();
++
++}
++
++static void
++gst_motion_cells_set_property (GObject * object, guint prop_id,
++    const GValue * value, GParamSpec * pspec)
++{
++  GstMotioncells *filter = gst_motion_cells (object);
++  //variables for overlay regions setup
++  gchar **strs, **colorstr, **motioncellsstr, **motionmaskcellsstr;
++  int i, ux, uy, lx, ly;
++  int r, g, b;
++  int linidx, colidx, masklinidx, maskcolidx;
++  int tmpux = -1;
++  int tmpuy = -1;
++  int tmplx = -1;
++  int tmply = -1;
++
++  switch (prop_id) {
++    case PROP_GRID_X:
++      filter->ret = gst_element_get_state (GST_ELEMENT (filter),
++          &filter->state, &filter->pending, 250 * GST_NSECOND);
++      filter->gridx = g_value_get_int (value);
++      if (filter->prevgridx != filter->gridx
++          && filter->ret == GST_STATE_CHANGE_SUCCESS
++          && filter->state == GST_STATE_PLAYING) {
++        filter->changed_gridx = true;
++        filter->prevgridx = filter->gridx;
++      } else {
++        filter->prevgridx = filter->gridx;
++      }
++      break;
++    case PROP_GRID_Y:
++      filter->ret = gst_element_get_state (GST_ELEMENT (filter),
++          &filter->state, &filter->pending, 250 * GST_NSECOND);
++      filter->gridy = g_value_get_int (value);
++      if (filter->prevgridy != filter->gridy
++          && filter->ret == GST_STATE_CHANGE_SUCCESS
++          && filter->state == GST_STATE_PLAYING) {
++        filter->changed_gridy = true;
++        filter->prevgridy = filter->gridy;
++      } else {
++        filter->prevgridy = filter->gridy;
++      }
++      break;
++    case PROP_GAP:
++      filter->gap = g_value_get_int (value);
++      break;
++    case PROP_POSTNOMOTION:
++      filter->postnomotion = g_value_get_int (value);
++      break;
++    case PROP_SENSITIVITY:
++      filter->sensitivity = g_value_get_double (value);
++      break;
++    case PROP_THRESHOLD:
++      filter->threshold = g_value_get_double (value);
++      break;
++    case PROP_DISPLAY:
++      filter->display = g_value_get_boolean (value);
++      break;
++    case PROP_POSTALLMOTION:
++      filter->postallmotion = g_value_get_boolean (value);
++      break;
++    case PROP_USEALPHA:
++      filter->usealpha = g_value_get_boolean (value);
++      break;
++    case PROP_CALCULATEMOTION:
++      filter->calculate_motion = g_value_get_boolean (value);
++      break;
++    case PROP_DATE:
++      filter->ret = gst_element_get_state (GST_ELEMENT (filter),
++          &filter->state, &filter->pending, 250 * GST_NSECOND);
++      if (filter->ret == GST_STATE_CHANGE_SUCCESS
++          && filter->state == GST_STATE_PLAYING) {
++        filter->starttime = g_value_get_long (value);
++        filter->changed_startime = true;
++      } else {
++        filter->starttime = g_value_get_long (value);
++      }
++      break;
++    case PROP_DATAFILE:
++      if (filter->cur_datafile) {
++        g_free (filter->cur_datafile);
++      }
++      if (filter->basename_datafile)
++        g_free (filter->basename_datafile);
++      filter->basename_datafile = g_value_dup_string (value);
++
++      if (strlen (filter->basename_datafile) == 0) {
++        filter->cur_datafile = g_strdup ("");
++        break;
++      }
++      filter->cur_datafile =
++          g_strdup_printf ("%s-0.%s", filter->basename_datafile,
++          filter->datafile_extension);
++      if (g_strcmp0 (filter->prev_datafile, filter->basename_datafile) != 0) {
++        g_mutex_lock (filter->changed_datafile_mutex);
++        filter->changed_datafile = TRUE;
++        filter->sent_init_error_msg = FALSE;
++        filter->sent_save_error_msg = FALSE;
++        filter->datafileidx = 0;
++        motion_cells_free_resources (filter->id);
++      } else {
++        filter->changed_datafile = FALSE;
++        g_mutex_unlock (filter->changed_datafile_mutex);
++      }
++      if (filter->prev_datafile)
++        g_free (filter->prev_datafile);
++      filter->prev_datafile = g_strdup (filter->basename_datafile);
++      break;
++    case PROP_DATAFILE_EXT:
++      if (filter->datafile_extension)
++        g_free (filter->datafile_extension);
++      filter->datafile_extension = g_value_dup_string (value);
++      break;
++    case PROP_MOTIONMASKCOORD:
++      strs = g_strsplit (g_value_get_string (value), ",", 255);
++
++      //setting number of regions
++      for (filter->motionmaskcoord_count = 0;
++          strs[filter->motionmaskcoord_count] != NULL;
++          ++filter->motionmaskcoord_count);
++      sscanf (strs[0], "%d:%d:%d:%d", &tmpux, &tmpuy, &tmplx, &tmply);
++      if (tmpux > -1 && tmpuy > -1 && tmplx > -1 && tmply > -1) {
++        filter->motionmaskcoords =
++            (motionmaskcoordrect *) g_malloc (filter->motionmaskcoord_count *
++            sizeof (motionmaskcoordrect));
++
++        for (i = 0; i < filter->motionmaskcoord_count; ++i) {
++          sscanf (strs[i], "%d:%d:%d:%d", &ux, &uy, &lx, &ly);
++          filter->motionmaskcoords[i].upper_left_x = ux;
++          filter->motionmaskcoords[i].upper_left_y = uy;
++          filter->motionmaskcoords[i].lower_right_x = lx;
++          filter->motionmaskcoords[i].lower_right_y = ly;
++        }
++      } else {
++        filter->motionmaskcoord_count = 0;
++      }
++      if (strs)
++        g_strfreev (strs);
++      tmpux = -1;
++      tmpuy = -1;
++      tmplx = -1;
++      tmply = -1;
++      break;
++    case PROP_MOTIONMASKCELLSPOS:
++      motionmaskcellsstr = g_strsplit (g_value_get_string (value), ",", 255);
++
++      //setting number of regions
++      for (filter->motionmaskcells_count = 0;
++          motionmaskcellsstr[filter->motionmaskcells_count] != NULL;
++          ++filter->motionmaskcells_count);
++      sscanf (motionmaskcellsstr[0], "%d:%d", &tmpux, &tmpuy);
++      if (tmpux > -1 && tmpuy > -1) {
++        filter->motionmaskcellsidx =
++            (motioncellidx *) g_malloc (filter->motionmaskcells_count *
++            sizeof (motioncellidx));
++        for (i = 0; i < filter->motionmaskcells_count; ++i) {
++          sscanf (motionmaskcellsstr[i], "%d:%d", &masklinidx, &maskcolidx);
++          filter->motionmaskcellsidx[i].lineidx = masklinidx;
++          filter->motionmaskcellsidx[i].columnidx = maskcolidx;
++        }
++      } else {
++        filter->motionmaskcells_count = 0;
++      }
++      if (motionmaskcellsstr)
++        g_strfreev (motionmaskcellsstr);
++      tmpux = -1;
++      tmpuy = -1;
++      tmplx = -1;
++      tmply = -1;
++      break;
++    case PROP_CELLSCOLOR:
++
++      colorstr = g_strsplit (g_value_get_string (value), ",", 255);
++      sscanf (colorstr[0], "%d", &r);
++      sscanf (colorstr[1], "%d", &g);
++      sscanf (colorstr[2], "%d", &b);
++      //check right RGB color format
++      (r < 0) ? r = 0 : (r > 255) ? r = 255 : 0;
++      (g < 0) ? g = 0 : (g > 255) ? g = 255 : 0;
++      (b < 0) ? b = 0 : (b > 255) ? b = 255 : 0;
++      filter->motioncellscolor->R_channel_value = r;
++      filter->motioncellscolor->G_channel_value = g;
++      filter->motioncellscolor->B_channel_value = b;
++      if (colorstr)
++        g_strfreev (colorstr);
++      break;
++    case PROP_MOTIONCELLSIDX:
++      motioncellsstr = g_strsplit (g_value_get_string (value), ",", 255);
++
++      //setting number of regions
++      for (filter->motioncells_count = 0;
++          motioncellsstr[filter->motioncells_count] != NULL;
++          ++filter->motioncells_count);
++
++      sscanf (motioncellsstr[0], "%d:%d", &tmpux, &tmpuy);
++      if (tmpux > -1 && tmpuy > -1) {
++        if (filter->motioncellsidx)
++          g_free (filter->motioncellsidx);
++
++        filter->motioncellsidx =
++            (motioncellidx *) g_malloc (filter->motioncells_count *
++            sizeof (motioncellidx));
++
++        for (i = 0; i < filter->motioncells_count; ++i) {
++          sscanf (motioncellsstr[i], "%d:%d", &linidx, &colidx);
++          filter->motioncellsidx[i].lineidx = linidx;
++          filter->motioncellsidx[i].columnidx = colidx;
++        }
++      } else {
++        filter->motioncells_count = 0;
++      }
++      if (motioncellsstr)
++        g_strfreev (motioncellsstr);
++      tmpux = -1;
++      tmpuy = -1;
++      tmplx = -1;
++      tmply = -1;
++      break;
++    case PROP_MOTIONCELLTHICKNESS:
++      filter->thickness = g_value_get_int (value);
++      break;
++    default:
++      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
++      break;
++  }
++}
++
++static void
++gst_motion_cells_get_property (GObject * object, guint prop_id,
++    GValue * value, GParamSpec * pspec)
++{
++  GstMotioncells *filter = gst_motion_cells (object);
++  GString *str, *substr;
++  gboolean first;
++  int i;
++
++  switch (prop_id) {
++    case PROP_GRID_X:
++      g_value_set_int (value, filter->gridx);
++      break;
++    case PROP_GRID_Y:
++      g_value_set_int (value, filter->gridy);
++      break;
++    case PROP_GAP:
++      g_value_set_int (value, filter->gap);
++      break;
++    case PROP_POSTNOMOTION:
++      g_value_set_int (value, filter->postnomotion);
++      break;
++    case PROP_SENSITIVITY:
++      g_value_set_double (value, filter->sensitivity);
++      break;
++    case PROP_THRESHOLD:
++      g_value_set_double (value, filter->threshold);
++      break;
++    case PROP_DISPLAY:
++      g_value_set_boolean (value, filter->display);
++      break;
++    case PROP_POSTALLMOTION:
++      g_value_set_boolean (value, filter->postallmotion);
++      break;
++    case PROP_USEALPHA:
++      g_value_set_boolean (value, filter->usealpha);
++      break;
++    case PROP_CALCULATEMOTION:
++      g_value_set_boolean (value, filter->calculate_motion);
++      break;
++    case PROP_DATE:
++      g_value_set_long (value, filter->starttime);
++      break;
++    case PROP_DATAFILE:
++      g_value_set_string (value, filter->basename_datafile);
++      break;
++    case PROP_DATAFILE_EXT:
++      g_value_set_string (value, filter->datafile_extension);
++      break;
++    case PROP_MOTIONMASKCOORD:
++      str = g_string_new ("");
++      first = TRUE;
++      for (i = 0; i < filter->motionmaskcoord_count; ++i) {
++        substr = g_string_new (NULL);
++        g_string_sprintf (substr, "%d:%d:%d:%d",
++            filter->motionmaskcoords[i].upper_left_x,
++            filter->motionmaskcoords[i].upper_left_y,
++            filter->motionmaskcoords[i].lower_right_x,
++            filter->motionmaskcoords[i].lower_right_y);
++        if (first)
++          first = FALSE;
++        else
++          g_string_append_c (str, ',');
++        g_string_append (str, substr->str);
++        g_string_free (substr, TRUE);
++      }
++      g_value_set_string (value, str->str);
++      g_string_free (str, TRUE);
++      break;
++    case PROP_MOTIONMASKCELLSPOS:
++      str = g_string_new ("");
++      first = TRUE;
++      for (i = 0; i < filter->motionmaskcells_count; ++i) {
++        substr = g_string_new (NULL);
++        g_string_sprintf (substr, "%d:%d",
++            filter->motionmaskcellsidx[i].lineidx,
++            filter->motionmaskcellsidx[i].columnidx);
++        if (first)
++          first = FALSE;
++        else
++          g_string_append_c (str, ',');
++        g_string_append (str, substr->str);
++        g_string_free (substr, TRUE);
++      }
++      g_value_set_string (value, str->str);
++      g_string_free (str, TRUE);
++      break;
++    case PROP_CELLSCOLOR:
++      str = g_string_new ("");
++
++      g_string_sprintf (str, "%d,%d,%d",
++          filter->motioncellscolor->R_channel_value,
++          filter->motioncellscolor->G_channel_value,
++          filter->motioncellscolor->B_channel_value);
++
++      g_value_set_string (value, str->str);
++      g_string_free (str, TRUE);
++      break;
++    case PROP_MOTIONCELLSIDX:
++      str = g_string_new ("");
++      first = TRUE;
++      for (i = 0; i < filter->motioncells_count; ++i) {
++        substr = g_string_new (NULL);
++        g_string_sprintf (substr, "%d:%d",
++            filter->motioncellsidx[i].lineidx,
++            filter->motioncellsidx[i].columnidx);
++        if (first)
++          first = FALSE;
++        else
++          g_string_append_c (str, ',');
++        g_string_append (str, substr->str);
++        g_string_free (substr, TRUE);
++      }
++      g_value_set_string (value, str->str);
++      g_string_free (str, TRUE);
++      break;
++    case PROP_MOTIONCELLTHICKNESS:
++      g_value_set_int (value, filter->thickness);
++      break;
++    default:
++      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
++      break;
++  }
++}
++
++/* GstElement vmethod implementations */
++
++/* this function handles the link with other elements */
++static gboolean
++gst_motion_cells_set_caps (GstPad * pad, GstCaps * caps)
++{
++  GstMotioncells *filter;
++  GstPad *otherpad;
++  gint width, height;
++  GstStructure *structure;
++  int numerator, denominator;
++
++  filter = gst_motion_cells (gst_pad_get_parent (pad));
++  structure = gst_caps_get_structure (caps, 0);
++  gst_structure_get_int (structure, "width", &width);
++  gst_structure_get_int (structure, "height", &height);
++  gst_structure_get_fraction (structure, "framerate", &numerator, &denominator);
++  filter->framerate = (double) numerator / (double) denominator;
++  filter->cvImage = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
++
++  otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
++  gst_object_unref (filter);
++
++  return gst_pad_set_caps (otherpad, caps);
++}
++
++/* chain function
++ * this function does the actual processing
++ */
++static GstFlowReturn
++gst_motion_cells_chain (GstPad * pad, GstBuffer * buf)
++{
++
++  GstMotioncells *filter;
++
++  filter = gst_motion_cells (GST_OBJECT_PARENT (pad));
++  if (filter->calculate_motion) {
++    g_mutex_lock (filter->changed_datafile_mutex);
++    double sensitivity;
++    int framerate, gridx, gridy, motionmaskcells_count, motionmaskcoord_count,
++        motioncells_count, i;
++    int thickness, success, motioncellsidxcnt, numberOfCells,
++        motioncellsnumber, cellsOfInterestNumber;
++    int mincellsOfInterestNumber, motiondetect;
++    char *datafile;
++    bool display, changed_datafile, useAlpha;
++    gint64 starttime;
++    motionmaskcoordrect *motionmaskcoords;
++    motioncellidx *motionmaskcellsidx;
++    cellscolor *motioncellscolor;
++    motioncellidx *motioncellsidx;
++    buf = gst_buffer_make_writable (buf);
++    filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
++    if (filter->firstframe) {
++      setPrevFrame (filter->cvImage, filter->id);
++      filter->firstframe = FALSE;
++    }
++
++    sensitivity = filter->sensitivity;
++    framerate = filter->framerate;
++    gridx = filter->gridx;
++    gridy = filter->gridy;
++    display = filter->display;
++    motionmaskcoord_count = filter->motionmaskcoord_count;
++    motionmaskcoords =
++        (motionmaskcoordrect *) g_malloc (filter->motionmaskcoord_count *
++        sizeof (motionmaskcoordrect));
++    for (i = 0; i < filter->motionmaskcoord_count; i++) {
++      motionmaskcoords[i].upper_left_x =
++          filter->motionmaskcoords[i].upper_left_x;
++      motionmaskcoords[i].upper_left_y =
++          filter->motionmaskcoords[i].upper_left_y;
++      motionmaskcoords[i].lower_right_x =
++          filter->motionmaskcoords[i].lower_right_x;
++      motionmaskcoords[i].lower_right_y =
++          filter->motionmaskcoords[i].lower_right_y;
++    }
++    motionmaskcells_count = filter->motionmaskcells_count;
++    motionmaskcellsidx =
++        (motioncellidx *) g_malloc (filter->motionmaskcells_count *
++        sizeof (motioncellidx));
++    for (i = 0; i < filter->motionmaskcells_count; i++) {
++      motionmaskcellsidx[i].lineidx = filter->motionmaskcellsidx[i].lineidx;
++      motionmaskcellsidx[i].columnidx = filter->motionmaskcellsidx[i].columnidx;
++    }
++
++    motioncellscolor = (cellscolor *) g_malloc (sizeof (cellscolor));
++    motioncellscolor->R_channel_value =
++        filter->motioncellscolor->R_channel_value;
++    motioncellscolor->G_channel_value =
++        filter->motioncellscolor->G_channel_value;
++    motioncellscolor->B_channel_value =
++        filter->motioncellscolor->B_channel_value;
++    motioncells_count = filter->motioncells_count;
++    motioncellsidx =
++        (motioncellidx *) g_malloc (filter->motioncells_count *
++        sizeof (motioncellidx));
++    for (i = 0; i < filter->motioncells_count; i++) {
++      motioncellsidx[i].lineidx = filter->motioncellsidx[i].lineidx;
++      motioncellsidx[i].columnidx = filter->motioncellsidx[i].columnidx;
++    }
++
++    if ((g_strcmp0 (filter->cur_datafile, " ") != 0) &&
++        ((filter->changed_gridx || filter->changed_gridy)
++            || (filter->changed_startime))) {
++      if (filter->cur_datafile)
++        g_free (filter->cur_datafile);
++      filter->datafileidx++;
++      filter->cur_datafile =
++          g_strdup_printf ("%s-%d.%s", filter->basename_datafile,
++          filter->datafileidx, filter->datafile_extension);
++      filter->changed_datafile = TRUE;
++      filter->changed_gridx = FALSE;
++      filter->changed_gridy = FALSE;
++      filter->changed_startime = FALSE;
++    } else {
++      filter->changed_gridx = FALSE;
++      filter->changed_gridy = FALSE;
++    }
++    datafile = g_strdup (filter->cur_datafile);
++    filter->cur_buff_timestamp = GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND;
++    filter->starttime +=
++        (filter->cur_buff_timestamp - filter->prev_buff_timestamp);
++    starttime = filter->starttime;
++    if (filter->changed_datafile || filter->diff_timestamp < 0)
++      filter->diff_timestamp = 
++		  (gint64) (GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND);
++    changed_datafile = filter->changed_datafile;
++    useAlpha = filter->usealpha;
++    thickness = filter->thickness;
++    success =
++        perform_detection_motion_cells (filter->cvImage, sensitivity, framerate,
++        gridx, gridy,
++        (gint64) (GST_BUFFER_TIMESTAMP (buf) / GST_MSECOND) -
++        filter->diff_timestamp, display, useAlpha, motionmaskcoord_count,
++        motionmaskcoords, motionmaskcells_count, motionmaskcellsidx,
++        motioncellscolor, motioncells_count, motioncellsidx, starttime,
++        datafile, changed_datafile, thickness, filter->id);
++    if (success == 1 && filter->sent_init_error_msg == false) {
++      char *initfailedreason;
++      int initerrorcode;
++      GstStructure *s;
++      GstMessage *m;
++      initfailedreason = getInitDataFileFailed (filter->id);
++      initerrorcode = getInitErrorCode (filter->id);
++      s = gst_structure_new ("motion", "init_error_code", G_TYPE_INT,
++          initerrorcode, "details", G_TYPE_STRING, initfailedreason, NULL);
++      m = gst_message_new_element (GST_OBJECT (filter), s);
++      gst_element_post_message (GST_ELEMENT (filter), m);
++      filter->sent_init_error_msg = TRUE;
++    }
++    if (success == -1 && filter->sent_save_error_msg == false) {
++      char *savefailedreason;
++      int saveerrorcode;
++      GstStructure *s;
++      GstMessage *m;
++      savefailedreason = getSaveDataFileFailed (filter->id);
++      saveerrorcode = getSaveErrorCode (filter->id);
++      s = gst_structure_new ("motion", "save_error_code", G_TYPE_INT,
++          saveerrorcode, "details", G_TYPE_STRING, savefailedreason, NULL);
++      m = gst_message_new_element (GST_OBJECT (filter), s);
++      gst_element_post_message (GST_ELEMENT (filter), m);
++      filter->sent_save_error_msg = TRUE;
++    }
++    filter->changed_datafile = getChangedDataFile (filter->id);
++    motioncellsidxcnt = getMotionCellsIdxCnt (filter->id);
++    numberOfCells = filter->gridx * filter->gridy;
++    motioncellsnumber = motioncellsidxcnt / MSGLEN;
++    cellsOfInterestNumber = (filter->motioncells_count > 0) ?   //how many cells interest for us
++        (filter->motioncells_count) : (numberOfCells);
++    mincellsOfInterestNumber =
++        floor ((double) cellsOfInterestNumber * filter->threshold);
++    motiondetect = (motioncellsnumber >= mincellsOfInterestNumber) ? 1 : 0;
++    if (motioncellsidxcnt > 0 && filter->postallmotion) {
++      char *detectedmotioncells;
++      GstStructure *s;
++      GstMessage *m;
++      detectedmotioncells = getMotionCellsIdx (filter->id);
++      filter->motion_timestamp = GST_BUFFER_TIMESTAMP (buf);
++      s = gst_structure_new ("motion", "motion_cells_indices", G_TYPE_STRING,
++          detectedmotioncells, "motion", G_TYPE_UINT64, filter->motion_timestamp,
++          NULL);
++      m = gst_message_new_element (GST_OBJECT (filter), s);
++      gst_element_post_message (GST_ELEMENT (filter), m);
++    }
++    if (motioncellsidxcnt > 0 && motiondetect == 1) {
++      char *detectedmotioncells;
++      filter->last_motion_timestamp = GST_BUFFER_TIMESTAMP (buf);
++      detectedmotioncells = getMotionCellsIdx (filter->id);
++      GST_DEBUG ("POST MOTION MSG\n");
++      if (filter->previous_motion == false) {
++        GstStructure *s;
++        GstMessage *m;
++        filter->previous_motion = true;
++       	filter->motion_begin_timestamp = GST_BUFFER_TIMESTAMP (buf);
++        s = gst_structure_new ("motion", "motion_cells_indices", G_TYPE_STRING,
++            detectedmotioncells, "motion_begin", G_TYPE_UINT64,
++            filter->motion_begin_timestamp, NULL);
++        m = gst_message_new_element (GST_OBJECT (filter), s);
++        gst_element_post_message (GST_ELEMENT (filter), m);
++      }
++    } else {                    //not detect motion
++      if ((((long int) (GST_BUFFER_TIMESTAMP (buf) / 1000000000l) -
++                  (long int) (filter->last_motion_timestamp / 1000000000l)) >= filter->gap)
++          && (filter->last_motion_timestamp > 0)) {
++        GST_DEBUG ("POST MOTION FINISHED MSG\n");
++        if (filter->previous_motion) {
++          GstStructure *s;
++          GstMessage *m;
++          filter->previous_motion = false;
++          s = gst_structure_new ("motion", "motion_finished", G_TYPE_UINT64,
++              filter->last_motion_timestamp, NULL);
++          m = gst_message_new_element (GST_OBJECT (filter), s);
++          gst_element_post_message (GST_ELEMENT (filter), m);
++        }
++      }
++        if (filter->postnomotion>0){
++           long int last_buf_timestamp = GST_BUFFER_TIMESTAMP (buf) / 1000000000l;
++           if ((last_buf_timestamp -
++                  (long int) (filter->last_motion_timestamp / 1000000000l)) >= filter->postnomotion) {
++              GST_DEBUG ("POST NO MOTION MSG\n");
++              if ((last_buf_timestamp -
++                   (long int) (filter->last_nomotion_notified / 1000000000l)) >= filter->postnomotion){
++                GstStructure *s;
++                GstMessage *m;
++                filter->last_nomotion_notified = GST_BUFFER_TIMESTAMP (buf);
++                s = gst_structure_new ("motion", "no_motion", G_TYPE_UINT64,
++                   filter->last_motion_timestamp, NULL);
++                m = gst_message_new_element (GST_OBJECT (filter), s);
++                gst_element_post_message (GST_ELEMENT (filter), m);
++              }
++        }  
++      }
++    }
++    filter->prev_buff_timestamp = filter->cur_buff_timestamp;
++    //free
++    g_free (datafile);
++    g_free (motionmaskcoords);
++    g_free (motionmaskcellsidx);
++    g_free (motioncellsidx);
++    g_free (motioncellscolor);
++
++    g_mutex_unlock (filter->changed_datafile_mutex);
++  }
++
++  return gst_pad_push (filter->srcpad, buf);
++}
++
++/* entry point to initialize the plug-in
++ * initialize the plug-in itself
++ * register the element factories and other features
++ */
++gboolean
++gst_motioncells_plugin_init (GstPlugin * plugin)
++{
++  /* debug category for fltering log messages */
++  GST_DEBUG_CATEGORY_INIT (gst_motion_cells_debug,
++      "motioncells",
++      0,
++      "Performs motion detection on videos, providing detected positions via bus messages");
++
++  return gst_element_register (plugin, "motioncells", GST_RANK_NONE,
++      GST_TYPE_MOTIONCELLS);
++}
+diff -rupN orig/ext/opencv/gstmotioncells.h new/ext/opencv/gstmotioncells.h
+--- orig/ext/opencv/gstmotioncells.h	1970-01-01 01:00:00.000000000 +0100
++++ new/ext/opencv/gstmotioncells.h	2011-07-05 18:59:41.000000000 +0100
+@@ -0,0 +1,109 @@
++/*
++ * GStreamer
++ * Copyright (C) 2011 Robert Jobbagy <jobbagy.robert@gmail.com>
++ * 
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++ * DEALINGS IN THE SOFTWARE.
++ *
++ * Alternatively, the contents of this file may be used under the
++ * GNU Lesser General Public License Version 2.1 (the "LGPL"), in
++ * which case the following provisions apply instead of the ones
++ * mentioned above:
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++#ifndef __GST_MOTIONCELLS_H__
++#define __GST_MOTIONCELLS_H__
++
++#include <gst/gst.h>
++#include <cv.h>
++#include "analitics.h"
++
++G_BEGIN_DECLS
++/* #defines don't like whitespacey bits */
++#define GST_TYPE_MOTIONCELLS \
++  (gst_motion_cells_get_type())
++#define gst_motion_cells(obj) \
++  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MOTIONCELLS,GstMotioncells))
++#define gst_motion_cells_CLASS(klass) \
++  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MOTIONCELLS,GstMotioncellsClass))
++#define GST_IS_MOTIONCELLS(obj) \
++  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MOTIONCELLS))
++#define GST_IS_MOTIONCELLS_CLASS(klass) \
++  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MOTIONCELLS))
++typedef struct _GstMotioncells GstMotioncells;
++typedef struct _GstMotioncellsClass GstMotioncellsClass;
++
++struct _GstMotioncells
++{
++  GstElement element;
++  GstPad *sinkpad, *srcpad;
++  GstState state, pending;
++  GstStateChangeReturn ret;
++  gboolean display, calculate_motion, firstgridx, firstgridy, changed_gridx,
++      changed_gridy, changed_startime;
++  gboolean sent_init_error_msg, sent_save_error_msg;
++  gchar *prev_datafile, *cur_datafile, *basename_datafile, *datafile_extension;
++  gint prevgridx, gridx;
++  gint prevgridy, gridy;
++  gint id;
++  gdouble sensitivity;
++  gdouble threshold;
++  IplImage *cvImage;
++  motionmaskcoordrect *motionmaskcoords;
++  cellscolor *motioncellscolor;
++  motioncellidx *motioncellsidx, *motionmaskcellsidx;
++  int motionmaskcoord_count, motioncells_count, motionmaskcells_count;
++  int gap, thickness, datafileidx, postnomotion;
++  guint64 motion_begin_timestamp, last_motion_timestamp, motion_timestamp, last_nomotion_notified;
++  gint64 diff_timestamp; 
++  guint64 prev_buff_timestamp, cur_buff_timestamp;
++  gint64 starttime;
++  //time stuff
++  struct timeval tv;
++  gboolean previous_motion, changed_datafile, postallmotion, usealpha,
++      firstdatafile, firstframe;
++  GMutex *changed_datafile_mutex;
++  double framerate;
++};
++
++struct _GstMotioncellsClass
++{
++  GstElementClass parent_class;
++};
++
++GType gst_motion_cells_get_type (void);
++
++gboolean gst_motioncells_plugin_init (GstPlugin * plugin);
++
++G_END_DECLS
++#endif /* __GST_MOTION_CELLS_H__ */
+diff -rupN orig/ext/opencv/gstopencv.c new/ext/opencv/gstopencv.c
+--- orig/ext/opencv/gstopencv.c	2011-04-08 00:35:37.000000000 +0100
++++ new/ext/opencv/gstopencv.c	2011-07-05 18:59:41.000000000 +0100
+@@ -32,6 +32,7 @@
+ #include "gstedgedetect.h"
+ #include "gstfaceblur.h"
+ #include "gstfacedetect.h"
++#include "gstmotioncells.h"
+ #include "gstpyramidsegment.h"
+ #include "gsttemplatematch.h"
+ #include "gsttextoverlay.h"
+@@ -66,6 +67,9 @@ plugin_init (GstPlugin * plugin)
+   if (!gst_facedetect_plugin_init (plugin))
+     return FALSE;
+ 
++  if(!gst_motioncells_plugin_init (plugin))
++	return FALSE;
++
+   if (!gst_pyramidsegment_plugin_init (plugin))
+     return FALSE;
+ 
+diff -rupN orig/ext/opencv/motioncells_wrapper.cpp new/ext/opencv/motioncells_wrapper.cpp
+--- orig/ext/opencv/motioncells_wrapper.cpp	1970-01-01 01:00:00.000000000 +0100
++++ new/ext/opencv/motioncells_wrapper.cpp	2011-07-05 18:59:41.000000000 +0100
+@@ -0,0 +1,161 @@
++
++
++#include <stdio.h>
++#include "motioncells_wrapper.h"
++
++extern int instanceCounter;
++MotionCells *mc;
++char p_str[] = "idx failed";
++
++void
++motion_cells_init ()
++{
++  mc = new MotionCells ();
++  instanceOfMC tmpmc;
++  tmpmc.id = instanceCounter;
++  tmpmc.mc = mc;
++  motioncellsvector.push_back (tmpmc);
++  instanceCounter++;
++}
++
++int
++perform_detection_motion_cells (IplImage * p_image, double p_sensitivity,
++    double p_framerate, int p_gridx, int p_gridy, long int p_timestamp_millisec,
++    bool p_isVisible, bool p_useAlpha, int motionmaskcoord_count,
++    motionmaskcoordrect * motionmaskcoords, int motionmaskcells_count,
++    motioncellidx * motionmaskcellsidx, cellscolor * motioncellscolor,
++    int motioncells_count, motioncellidx * motioncellsidx, gint64 starttime,
++    char *p_datafile, bool p_changed_datafile, int p_thickness, int p_id)
++{
++  int idx = 0;
++  idx = searchIdx (p_id);
++  return motioncellsvector.at (idx).mc->performDetectionMotionCells (p_image,
++      p_sensitivity, p_framerate, p_gridx, p_gridy, p_timestamp_millisec,
++      p_isVisible, p_useAlpha, motionmaskcoord_count, motionmaskcoords,
++      motionmaskcells_count, motionmaskcellsidx, motioncellscolor,
++      motioncells_count, motioncellsidx, starttime, p_datafile,
++      p_changed_datafile, p_thickness);
++}
++
++
++void
++setPrevFrame (IplImage * p_prevFrame, int p_id)
++{
++  int idx = 0;
++  idx = searchIdx (p_id);
++  motioncellsvector.at (idx).mc->setPrevFrame (p_prevFrame);
++}
++
++char *
++getMotionCellsIdx (int p_id)
++{
++  int idx = 0;
++  idx = searchIdx (p_id);
++  if (idx > -1)
++    return motioncellsvector.at (idx).mc->getMotionCellsIdx ();
++  else {
++    return p_str;
++  }
++
++}
++
++int
++getMotionCellsIdxCnt (int p_id)
++{
++  int idx = 0;
++  idx = searchIdx (p_id);
++  if (idx > -1)
++    return motioncellsvector.at (idx).mc->getMotionCellsIdxCount ();
++  else
++    return 0;
++}
++
++bool
++getChangedDataFile (int p_id)
++{
++  int idx = 0;
++  idx = searchIdx (p_id);
++  if (idx > -1)
++    return motioncellsvector.at (idx).mc->getChangedDataFile ();
++  else
++    return false;
++}
++
++int
++searchIdx (int p_id)
++{
++  for (unsigned int i = 0; i < motioncellsvector.size (); i++) {
++    instanceOfMC tmpmc;
++    tmpmc = motioncellsvector.at (i);
++    if (tmpmc.id == p_id) {
++      return i;
++    }
++  }
++  return -1;
++}
++
++char *
++getInitDataFileFailed (int p_id)
++{
++  int idx = 0;
++  idx = searchIdx (p_id);
++  if (idx > -1)
++    return motioncellsvector.at (idx).mc->getDatafileInitFailed ();
++  else {
++    return p_str;
++  }
++}
++
++char *
++getSaveDataFileFailed (int p_id)
++{
++  int idx = 0;
++  idx = searchIdx (p_id);
++  if (idx > -1)
++    return motioncellsvector.at (idx).mc->getDatafileSaveFailed ();
++  else {
++    return p_str;
++  }
++}
++
++int
++getInitErrorCode (int p_id)
++{
++  int idx = 0;
++  idx = searchIdx (p_id);
++  if (idx > -1)
++    return motioncellsvector.at (idx).mc->getInitErrorCode ();
++  else
++    return -1;
++}
++
++int
++getSaveErrorCode (int p_id)
++{
++  int idx = 0;
++  idx = searchIdx (p_id);
++  if (idx > -1)
++    return motioncellsvector.at (idx).mc->getSaveErrorCode ();
++  else
++    return -1;
++}
++
++void
++motion_cells_free (int p_id)
++{
++  int idx = 0;
++  idx = searchIdx (p_id);
++  if (idx > -1) {
++    motioncellsvector.at (idx).mc->~MotionCells ();
++    motioncellsvector.erase (motioncellsvector.begin () + idx);
++  }
++}
++
++void
++motion_cells_free_resources (int p_id)
++{
++  int idx = 0;
++  idx = searchIdx (p_id);
++  if (idx > -1)
++    motioncellsvector.at (idx).mc->freeDataFile ();
++}
+diff -rupN orig/ext/opencv/motioncells_wrapper.h new/ext/opencv/motioncells_wrapper.h
+--- orig/ext/opencv/motioncells_wrapper.h	1970-01-01 01:00:00.000000000 +0100
++++ new/ext/opencv/motioncells_wrapper.h	2011-07-05 18:59:41.000000000 +0100
+@@ -0,0 +1,50 @@
++
++/*
++ * This wrapper class needed to call the c++ motioncells functions.
++ */
++
++#ifndef motioncells_WRAPPER_H
++#define motioncells_WRAPPER_H
++
++#include <stdbool.h>
++#include "analitics.h"
++
++#ifdef __cplusplus
++#include "MotionCells.h"
++struct instanceOfMC
++{
++  int id;
++  MotionCells *mc;
++};
++vector < instanceOfMC > motioncellsvector;
++
++int searchIdx (int p_id);
++extern "C"
++{
++#endif
++
++  void motion_cells_init ();
++  int perform_detection_motion_cells (IplImage * p_image, double p_sensitivity,
++      double p_framerate, int p_gridx, int p_gridy,
++      long int p_timestamp_millisec, bool p_isVisible, bool p_useAlpha,
++      int motionmaskcoord_count, motionmaskcoordrect * motionmaskcoords,
++      int motionmaskcells_count, motioncellidx * motionmaskcellsidx,
++      cellscolor * motioncellscolor, int motioncells_count,
++      motioncellidx * motioncellsidx, gint64 starttime, char *datafile,
++      bool p_changed_datafile, int p_thickness, int p_id);
++  void setPrevFrame (IplImage * p_prevFrame, int p_id);
++  void motion_cells_free (int p_id);
++  void motion_cells_free_resources (int p_id);
++  char *getMotionCellsIdx (int p_id);
++  int getMotionCellsIdxCnt (int p_id);
++  bool getChangedDataFile (int p_id);
++  char *getInitDataFileFailed (int p_id);
++  char *getSaveDataFileFailed (int p_id);
++  int getInitErrorCode (int p_id);
++  int getSaveErrorCode (int p_id);
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif                          /* BGDETECT_WRAPPER_H */
