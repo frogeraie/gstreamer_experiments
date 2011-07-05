@@ -23,6 +23,11 @@ class GstPluginsBad < Formula
   depends_on 'libsndfile' => :optional
   depends_on 'schroedinger' => :optional
 
+  def patches
+    # Add Motioncells
+    { :p1 => "https://raw.github.com/hackeron/gstreamer_experiments/master/patches/gst-plugins-bad-0.10.22-motioncells.patch" }
+  end
+
   def install
     ENV.append "CFLAGS", "-no-cpp-precomp -funroll-loops -fstrict-aliasing"
     system "./autogen.sh --noconfigure"
