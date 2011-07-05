@@ -1,27 +1,6 @@
-diff -rupN orig/configure new/configure
---- orig/configure	2011-07-05 19:36:52.000000000 +0100
-+++ new/configure	2011-07-05 19:37:31.000000000 +0100
-@@ -25462,7 +25462,7 @@ $as_echo "$flag_ok" >&6; }
- $as_echo_n "checking to see if compiler understands -Wvla... " >&6; }
- 
-   save_CFLAGS="$CFLAGS"
--  CFLAGS="$CFLAGS -Wvla"
-+  CFLAGS="$CFLAGS"
- 
-   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
- /* end confdefs.h.  */
-@@ -25484,7 +25484,7 @@ rm -f core conftest.err conftest.$ac_obj
-   CFLAGS="$save_CFLAGS"
- 
-   if test "X$flag_ok" = Xyes ; then
--    WARNING_CFLAGS="$WARNING_CFLAGS -Wvla"
-+    WARNING_CFLAGS="$WARNING_CFLAGS"
-     true
-   else
- 
 diff -rupN orig/configure.ac new/configure.ac
---- orig/configure.ac	2011-07-05 19:36:52.000000000 +0100
-+++ new/configure.ac	2011-07-05 19:37:11.000000000 +0100
+--- orig/configure.ac	2011-05-09 21:45:37.000000000 +0100
++++ new/configure.ac	2011-07-05 18:59:41.000000000 +0100
 @@ -108,9 +108,12 @@ AC_PROG_CC_STDC
  
  dnl determine c++ compiler
@@ -37,8 +16,8 @@ diff -rupN orig/configure.ac new/configure.ac
  
  dnl check if the compiler supports '-c' and '-o' options
 diff -rupN orig/docs/plugins/gst-plugins-bad-plugins.args new/docs/plugins/gst-plugins-bad-plugins.args
---- orig/docs/plugins/gst-plugins-bad-plugins.args	2011-07-05 19:36:52.000000000 +0100
-+++ new/docs/plugins/gst-plugins-bad-plugins.args	2011-07-05 19:37:11.000000000 +0100
+--- orig/docs/plugins/gst-plugins-bad-plugins.args	2011-05-10 11:34:54.000000000 +0100
++++ new/docs/plugins/gst-plugins-bad-plugins.args	2011-07-05 19:00:51.000000000 +0100
 @@ -46670,7 +46670,7 @@
  <FLAGS>rw</FLAGS>
  <NICK>Minimum size height</NICK>
@@ -458,8 +437,8 @@ diff -rupN orig/docs/plugins/gst-plugins-bad-plugins.args new/docs/plugins/gst-p
 +</ARG>
 +
 diff -rupN orig/docs/plugins/gst-plugins-bad-plugins.hierarchy new/docs/plugins/gst-plugins-bad-plugins.hierarchy
---- orig/docs/plugins/gst-plugins-bad-plugins.hierarchy	2011-07-05 19:36:52.000000000 +0100
-+++ new/docs/plugins/gst-plugins-bad-plugins.hierarchy	2011-07-05 19:37:11.000000000 +0100
+--- orig/docs/plugins/gst-plugins-bad-plugins.hierarchy	2011-05-10 11:34:02.000000000 +0100
++++ new/docs/plugins/gst-plugins-bad-plugins.hierarchy	2011-07-05 18:59:41.000000000 +0100
 @@ -193,6 +193,7 @@ GObject
        GstAmrWbEnc
        Gstedgedetect
@@ -469,8 +448,8 @@ diff -rupN orig/docs/plugins/gst-plugins-bad-plugins.hierarchy new/docs/plugins/
        GstTemplateMatch
        GstOpencvTextOverlay
 diff -rupN orig/ext/opencv/Makefile.am new/ext/opencv/Makefile.am
---- orig/ext/opencv/Makefile.am	2011-07-05 19:36:53.000000000 +0100
-+++ new/ext/opencv/Makefile.am	2011-07-05 19:37:11.000000000 +0100
+--- orig/ext/opencv/Makefile.am	2011-04-08 00:35:37.000000000 +0100
++++ new/ext/opencv/Makefile.am	2011-07-05 18:59:41.000000000 +0100
 @@ -16,7 +16,12 @@ libgstopencv_la_SOURCES = gstopencv.c \
  			gstfacedetect.c \
  			gstpyramidsegment.c \
@@ -496,7 +475,7 @@ diff -rupN orig/ext/opencv/Makefile.am new/ext/opencv/Makefile.am
 +		MotionCells.h
 diff -rupN orig/ext/opencv/MotionCells.cpp new/ext/opencv/MotionCells.cpp
 --- orig/ext/opencv/MotionCells.cpp	1970-01-01 01:00:00.000000000 +0100
-+++ new/ext/opencv/MotionCells.cpp	2011-07-05 19:37:11.000000000 +0100
++++ new/ext/opencv/MotionCells.cpp	2011-07-05 18:59:41.000000000 +0100
 @@ -0,0 +1,565 @@
 +/*
 + * MotionCells.cpp
@@ -1065,7 +1044,7 @@ diff -rupN orig/ext/opencv/MotionCells.cpp new/ext/opencv/MotionCells.cpp
 +}
 diff -rupN orig/ext/opencv/MotionCells.h new/ext/opencv/MotionCells.h
 --- orig/ext/opencv/MotionCells.h	1970-01-01 01:00:00.000000000 +0100
-+++ new/ext/opencv/MotionCells.h	2011-07-05 19:37:11.000000000 +0100
++++ new/ext/opencv/MotionCells.h	2011-07-05 18:59:41.000000000 +0100
 @@ -0,0 +1,181 @@
 +/*
 + * MotionDetection.h
@@ -1250,7 +1229,7 @@ diff -rupN orig/ext/opencv/MotionCells.h new/ext/opencv/MotionCells.h
 +#endif /* MOTIONCELLS_H_ */
 diff -rupN orig/ext/opencv/analitics.h new/ext/opencv/analitics.h
 --- orig/ext/opencv/analitics.h	1970-01-01 01:00:00.000000000 +0100
-+++ new/ext/opencv/analitics.h	2011-07-05 19:37:11.000000000 +0100
++++ new/ext/opencv/analitics.h	2011-07-05 18:59:41.000000000 +0100
 @@ -0,0 +1,47 @@
 +#ifndef ANALITICS_H_
 +#define ANALITICS_H_
@@ -1301,7 +1280,7 @@ diff -rupN orig/ext/opencv/analitics.h new/ext/opencv/analitics.h
 +#endif /* ANALITICS_H_ */
 diff -rupN orig/ext/opencv/gstmotioncells.c new/ext/opencv/gstmotioncells.c
 --- orig/ext/opencv/gstmotioncells.c	1970-01-01 01:00:00.000000000 +0100
-+++ new/ext/opencv/gstmotioncells.c	2011-07-05 19:37:11.000000000 +0100
++++ new/ext/opencv/gstmotioncells.c	2011-07-05 18:59:41.000000000 +0100
 @@ -0,0 +1,976 @@
 +/*
 + * GStreamer
@@ -2281,7 +2260,7 @@ diff -rupN orig/ext/opencv/gstmotioncells.c new/ext/opencv/gstmotioncells.c
 +}
 diff -rupN orig/ext/opencv/gstmotioncells.h new/ext/opencv/gstmotioncells.h
 --- orig/ext/opencv/gstmotioncells.h	1970-01-01 01:00:00.000000000 +0100
-+++ new/ext/opencv/gstmotioncells.h	2011-07-05 19:37:11.000000000 +0100
++++ new/ext/opencv/gstmotioncells.h	2011-07-05 18:59:41.000000000 +0100
 @@ -0,0 +1,109 @@
 +/*
 + * GStreamer
@@ -2393,8 +2372,8 @@ diff -rupN orig/ext/opencv/gstmotioncells.h new/ext/opencv/gstmotioncells.h
 +G_END_DECLS
 +#endif /* __GST_MOTION_CELLS_H__ */
 diff -rupN orig/ext/opencv/gstopencv.c new/ext/opencv/gstopencv.c
---- orig/ext/opencv/gstopencv.c	2011-07-05 19:36:53.000000000 +0100
-+++ new/ext/opencv/gstopencv.c	2011-07-05 19:37:11.000000000 +0100
+--- orig/ext/opencv/gstopencv.c	2011-04-08 00:35:37.000000000 +0100
++++ new/ext/opencv/gstopencv.c	2011-07-05 18:59:41.000000000 +0100
 @@ -32,6 +32,7 @@
  #include "gstedgedetect.h"
  #include "gstfaceblur.h"
@@ -2415,7 +2394,7 @@ diff -rupN orig/ext/opencv/gstopencv.c new/ext/opencv/gstopencv.c
  
 diff -rupN orig/ext/opencv/motioncells_wrapper.cpp new/ext/opencv/motioncells_wrapper.cpp
 --- orig/ext/opencv/motioncells_wrapper.cpp	1970-01-01 01:00:00.000000000 +0100
-+++ new/ext/opencv/motioncells_wrapper.cpp	2011-07-05 19:37:11.000000000 +0100
++++ new/ext/opencv/motioncells_wrapper.cpp	2011-07-05 18:59:41.000000000 +0100
 @@ -0,0 +1,161 @@
 +
 +
@@ -2580,7 +2559,7 @@ diff -rupN orig/ext/opencv/motioncells_wrapper.cpp new/ext/opencv/motioncells_wr
 +}
 diff -rupN orig/ext/opencv/motioncells_wrapper.h new/ext/opencv/motioncells_wrapper.h
 --- orig/ext/opencv/motioncells_wrapper.h	1970-01-01 01:00:00.000000000 +0100
-+++ new/ext/opencv/motioncells_wrapper.h	2011-07-05 19:37:11.000000000 +0100
++++ new/ext/opencv/motioncells_wrapper.h	2011-07-05 18:59:41.000000000 +0100
 @@ -0,0 +1,50 @@
 +
 +/*
