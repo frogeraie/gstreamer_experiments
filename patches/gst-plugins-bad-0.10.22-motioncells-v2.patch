@@ -1,18 +1,6 @@
-diff --git a/configure.ac b/configure.ac
-index 7268961..edbc4ba 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -52,8 +52,8 @@ AC_LIBTOOL_WIN32_DLL
- AM_PROG_LIBTOOL
- 
- dnl *** required versions of GStreamer stuff ***
--GST_REQ=0.10.34.1
--GSTPB_REQ=0.10.34.1
-+GST_REQ=0.10.34
-+GSTPB_REQ=0.10.34
- 
- dnl *** autotools stuff ****
- 
+diff -rupN orig/configure.ac version2/configure.ac
+--- orig/configure.ac	2011-05-09 21:45:37.000000000 +0100
++++ version2/configure.ac	2011-07-06 04:16:30.000000000 +0100
 @@ -108,9 +108,12 @@ AC_PROG_CC_STDC
  
  dnl determine c++ compiler
@@ -27,141 +15,255 @@ index 7268961..edbc4ba 100644
  AS_PROG_OBJC
  
  dnl check if the compiler supports '-c' and '-o' options
-diff --git a/docs/plugins/gst-plugins-bad-plugins.args b/docs/plugins/gst-plugins-bad-plugins.args
-index 73ea435..2723811 100644
---- a/docs/plugins/gst-plugins-bad-plugins.args
-+++ b/docs/plugins/gst-plugins-bad-plugins.args
-@@ -41,7 +41,7 @@
- <ARG>
- <NAME>GstXvidEnc::averaging-period</NAME>
- <TYPE>gint</TYPE>
--<RANGE>[-1,100]</RANGE>
-+<RANGE>[G_MAXULONG,100]</RANGE>
+diff -rupN orig/docs/plugins/gst-plugins-bad-plugins.args version2/docs/plugins/gst-plugins-bad-plugins.args
+--- orig/docs/plugins/gst-plugins-bad-plugins.args	2011-05-10 11:34:54.000000000 +0100
++++ version2/docs/plugins/gst-plugins-bad-plugins.args	2011-07-06 04:17:01.000000000 +0100
+@@ -46670,7 +46670,7 @@
  <FLAGS>rw</FLAGS>
- <NICK>Averaging Period</NICK>
- <BLURB>[CBR] Number of frames for which XviD averages bitrate.</BLURB>
-@@ -91,7 +91,7 @@
+ <NICK>Minimum size height</NICK>
+ <BLURB>Minimum window height size.</BLURB>
+-<DEFAULT>0</DEFAULT>
++<DEFAULT>30</DEFAULT>
+ </ARG>
+ 
  <ARG>
- <NAME>GstXvidEnc::buffer</NAME>
- <TYPE>gint</TYPE>
--<RANGE>>= -1</RANGE>
-+<RANGE>>= G_MAXULONG</RANGE>
+@@ -46680,7 +46680,7 @@
  <FLAGS>rw</FLAGS>
- <NICK>Buffer Size</NICK>
- <BLURB>[CBR] Size of the video buffers.</BLURB>
-@@ -121,7 +121,7 @@
+ <NICK>Minimum size width</NICK>
+ <BLURB>Minimum window width size.</BLURB>
+-<DEFAULT>0</DEFAULT>
++<DEFAULT>30</DEFAULT>
+ </ARG>
+ 
  <ARG>
- <NAME>GstXvidEnc::container-frame-overhead</NAME>
- <TYPE>gint</TYPE>
--<RANGE>[-1,100]</RANGE>
-+<RANGE>[G_MAXULONG,100]</RANGE>
+@@ -46690,7 +46690,7 @@
  <FLAGS>rw</FLAGS>
- <NICK>Container Frame Overhead</NICK>
- <BLURB>[PASS2] Average container overhead per frame.</BLURB>
-@@ -151,7 +151,7 @@
+ <NICK>Scale factor</NICK>
+ <BLURB>Factor by which the windows is scaled after each scan.</BLURB>
+-<DEFAULT>1.1</DEFAULT>
++<DEFAULT>1.25</DEFAULT>
+ </ARG>
+ 
  <ARG>
- <NAME>GstXvidEnc::flow-control-strength</NAME>
- <TYPE>gint</TYPE>
--<RANGE>[-1,100]</RANGE>
-+<RANGE>[G_MAXULONG,100]</RANGE>
- <FLAGS>rw</FLAGS>
- <NICK>Flow Control Strength</NICK>
- <BLURB>[PASS2] Overflow control strength per frame.</BLURB>
-@@ -211,7 +211,7 @@
+@@ -46704,6 +46704,46 @@
+ </ARG>
+ 
  <ARG>
- <NAME>GstXvidEnc::keyframe-reduction</NAME>
++<NAME>Gstfaceblur::min-neighbors</NAME>
++<TYPE>gint</TYPE>
++<RANGE>>= 0</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Mininum neighbors</NICK>
++<BLURB>Minimum number (minus 1) of neighbor rectangles that makes up an object.</BLURB>
++<DEFAULT>3</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstfaceblur::min-size-height</NAME>
++<TYPE>gint</TYPE>
++<RANGE>>= 0</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Minimum size height</NICK>
++<BLURB>Minimum window height size.</BLURB>
++<DEFAULT>30</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstfaceblur::min-size-width</NAME>
++<TYPE>gint</TYPE>
++<RANGE>>= 0</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Minimum size width</NICK>
++<BLURB>Minimum window width size.</BLURB>
++<DEFAULT>30</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstfaceblur::scale-factor</NAME>
++<TYPE>gdouble</TYPE>
++<RANGE>[1.1,10]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Scale factor</NICK>
++<BLURB>Factor by which the windows is scaled after each scan.</BLURB>
++<DEFAULT>1.25</DEFAULT>
++</ARG>
++
++<ARG>
+ <NAME>Gstedgedetect::aperture</NAME>
  <TYPE>gint</TYPE>
--<RANGE>[-1,100]</RANGE>
-+<RANGE>[G_MAXULONG,100]</RANGE>
- <FLAGS>rw</FLAGS>
- <NICK>Keyframe Reduction</NICK>
- <BLURB>[PASS2] Keyframe size reduction in % of those within threshold.</BLURB>
-@@ -221,7 +221,7 @@
- <ARG>
- <NAME>GstXvidEnc::keyframe-threshold</NAME>
- <TYPE>gint</TYPE>
--<RANGE>[-1,100]</RANGE>
-+<RANGE>[G_MAXULONG,100]</RANGE>
- <FLAGS>rw</FLAGS>
- <NICK>Keyframe Threshold</NICK>
- <BLURB>[PASS2] Distance between keyframes not to be subject to reduction.</BLURB>
-@@ -281,7 +281,7 @@
- <ARG>
- <NAME>GstXvidEnc::max-overflow-degradation</NAME>
- <TYPE>gint</TYPE>
--<RANGE>[-1,100]</RANGE>
-+<RANGE>[G_MAXULONG,100]</RANGE>
- <FLAGS>rw</FLAGS>
- <NICK>Max Overflow Degradation</NICK>
- <BLURB>[PASS2] Amount in % that flow control can decrease frame size compared to ideal curve.</BLURB>
-@@ -291,7 +291,7 @@
- <ARG>
- <NAME>GstXvidEnc::max-overflow-improvement</NAME>
- <TYPE>gint</TYPE>
--<RANGE>[-1,100]</RANGE>
-+<RANGE>[G_MAXULONG,100]</RANGE>
- <FLAGS>rw</FLAGS>
- <NICK>Max Overflow Improvement</NICK>
- <BLURB>[PASS2] Amount in % that flow control can increase frame size compared to ideal curve.</BLURB>
-@@ -421,7 +421,7 @@
- <ARG>
- <NAME>GstXvidEnc::reaction-delay-factor</NAME>
- <TYPE>gint</TYPE>
--<RANGE>[-1,100]</RANGE>
-+<RANGE>[G_MAXULONG,100]</RANGE>
- <FLAGS>rw</FLAGS>
- <NICK>Reaction Delay Factor</NICK>
- <BLURB>[CBR] Reaction delay factor.</BLURB>
-@@ -46856,7 +46856,7 @@
- <ARG>
- <NAME>GstCvSobel::x-order</NAME>
- <TYPE>gint</TYPE>
--<RANGE>>= -1</RANGE>
-+<RANGE>>= G_MAXULONG</RANGE>
- <FLAGS>rw</FLAGS>
- <NICK>x order</NICK>
- <BLURB>Order of the derivative x.</BLURB>
-@@ -46866,7 +46866,7 @@
- <ARG>
- <NAME>GstCvSobel::y-order</NAME>
- <TYPE>gint</TYPE>
--<RANGE>>= -1</RANGE>
-+<RANGE>>= G_MAXULONG</RANGE>
- <FLAGS>rw</FLAGS>
- <NICK>y order</NICK>
- <BLURB>Order of the derivative y.</BLURB>
-@@ -57623,3 +57623,213 @@
- <DEFAULT>NULL</DEFAULT>
+ <RANGE>[3,7]</RANGE>
+@@ -47933,3 +47973,343 @@
+ <DEFAULT>"/dev/sditx0"</DEFAULT>
  </ARG>
  
 +<ARG>
-+<NAME>GstDecklinkSrc::connection</NAME>
-+<TYPE>GstDecklinkConnection</TYPE>
++<NAME>Gstmotioncells::calculatemotion</NAME>
++<TYPE>gboolean</TYPE>
 +<RANGE></RANGE>
-+<FLAGS>rwx</FLAGS>
-+<NICK>Connection</NICK>
-+<BLURB>Connection.</BLURB>
-+<DEFAULT>sdi</DEFAULT>
++<FLAGS>rw</FLAGS>
++<NICK>Calculate Motion</NICK>
++<BLURB>If needs calculate motion on frame you need this property setting true otherwise false.</BLURB>
++<DEFAULT>TRUE</DEFAULT>
 +</ARG>
 +
 +<ARG>
-+<NAME>GstDecklinkSrc::mode</NAME>
-+<TYPE>GstDecklinkModes</TYPE>
++<NAME>Gstmotioncells::cellscolor</NAME>
++<TYPE>gchar*</TYPE>
 +<RANGE></RANGE>
-+<FLAGS>rwx</FLAGS>
-+<NICK>Mode</NICK>
-+<BLURB>Mode.</BLURB>
-+<DEFAULT>ntsc</DEFAULT>
++<FLAGS>rw</FLAGS>
++<NICK>Color of Motion Cells</NICK>
++<BLURB>The color of motion cells separated with ",".</BLURB>
++<DEFAULT>"255,255,0"</DEFAULT>
 +</ARG>
 +
 +<ARG>
-+<NAME>GstDecklinkSink::mode</NAME>
-+<TYPE>GstDecklinkModes</TYPE>
++<NAME>Gstmotioncells::datafile</NAME>
++<TYPE>gchar*</TYPE>
 +<RANGE></RANGE>
-+<FLAGS>rwx</FLAGS>
-+<NICK>Mode</NICK>
-+<BLURB>Mode.</BLURB>
-+<DEFAULT>ntsc</DEFAULT>
++<FLAGS>rw</FLAGS>
++<NICK>DataFile</NICK>
++<BLURB>Location of motioncells data file (empty string means no saving).</BLURB>
++<DEFAULT>""</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::datafileextension</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>DataFile Extension</NICK>
++<BLURB>Extension of datafile.</BLURB>
++<DEFAULT>"vamc"</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::date</NAME>
++<TYPE>glong</TYPE>
++<RANGE>>= 0</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Cell Date</NICK>
++<BLURB>Current Data in milliseconds.</BLURB>
++<DEFAULT>1</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::display</NAME>
++<TYPE>gboolean</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Display</NICK>
++<BLURB>Motion Cells visible or not on Current Frame.</BLURB>
++<DEFAULT>TRUE</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::gap</NAME>
++<TYPE>gint</TYPE>
++<RANGE>[1,60]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>GAP</NICK>
++<BLURB>GAP between clips.</BLURB>
++<DEFAULT>5</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::gridx</NAME>
++<TYPE>gint</TYPE>
++<RANGE>[8,32]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>GRID X</NICK>
++<BLURB>Motion Grid X.</BLURB>
++<DEFAULT>10</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::gridy</NAME>
++<TYPE>gint</TYPE>
++<RANGE>[8,32]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>GRID Y</NICK>
++<BLURB>Motion Grid Y.</BLURB>
++<DEFAULT>10</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::motioncellsidx</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Cells Of Interest(MOCI)</NICK>
++<BLURB>The line and column idx separated with ":", describe a cell. Cells separated with ",".</BLURB>
++<DEFAULT>""</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::motioncellthickness</NAME>
++<TYPE>gint</TYPE>
++<RANGE>[G_MAXULONG,5]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Cell Thickness</NICK>
++<BLURB>Motion Cell Border Thickness, if it's -1 then motion cell will be fill.</BLURB>
++<DEFAULT>1</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::motionmaskcellspos</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Mask with Cells Position</NICK>
++<BLURB>The line and column idx separated with ":" what cells want we mask-out, describe a cell. Cells separated with ",".</BLURB>
++<DEFAULT>""</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::motionmaskcoords</NAME>
++<TYPE>gchar*</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Motion Mask with Coordinates</NICK>
++<BLURB>The upper left x, y and lower right x, y coordinates separated with ":", describe a region. Regions separated with ",".</BLURB>
++<DEFAULT>""</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::postallmotion</NAME>
++<TYPE>gboolean</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Post All Motion</NICK>
++<BLURB>Element post bus msg for every motion frame or just motion start and motion stop.</BLURB>
++<DEFAULT>FALSE</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::sensitivity</NAME>
++<TYPE>gdouble</TYPE>
++<RANGE>[0,1]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>SENSITIVITY</NICK>
++<BLURB>Motion CELLS SENSITIVITY.</BLURB>
++<DEFAULT>0.5</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::threshold</NAME>
++<TYPE>gdouble</TYPE>
++<RANGE>[0,1]</RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>THRESHOLD</NICK>
++<BLURB>Threshold of Motion CELLS Number.</BLURB>
++<DEFAULT>0.01</DEFAULT>
++</ARG>
++
++<ARG>
++<NAME>Gstmotioncells::usealpha</NAME>
++<TYPE>gboolean</TYPE>
++<RANGE></RANGE>
++<FLAGS>rw</FLAGS>
++<NICK>Use alpha</NICK>
++<BLURB>Use or not alpha blending because it cause flicking on frames, it has some bug.</BLURB>
++<DEFAULT>FALSE</DEFAULT>
 +</ARG>
 +
 +<ARG>
@@ -305,16 +407,6 @@ index 73ea435..2723811 100644
 +</ARG>
 +
 +<ARG>
-+<NAME>GstMotioncells::postnomotion</NAME>
-+<TYPE>gint</TYPE>
-+<RANGE>[0,180]</RANGE>
-+<FLAGS>rw</FLAGS>
-+<NICK>POSTNOMOTION</NICK>
-+<BLURB>If non 0 post a no_motion event is posted on the bus if no motion is detected for N seconds.</BLURB>
-+<DEFAULT>0</DEFAULT>
-+</ARG>
-+
-+<ARG>
 +<NAME>GstMotioncells::sensitivity</NAME>
 +<TYPE>gdouble</TYPE>
 +<RANGE>[0,1]</RANGE>
@@ -340,244 +432,24 @@ index 73ea435..2723811 100644
 +<RANGE></RANGE>
 +<FLAGS>rw</FLAGS>
 +<NICK>Use alpha</NICK>
-+<BLURB>Use or not alpha blending on frames with motion cells.</BLURB>
++<BLURB>Use or not alpha blending because it cause flicking on frames, it has some bug.</BLURB>
 +<DEFAULT>FALSE</DEFAULT>
 +</ARG>
 +
-diff --git a/docs/plugins/gst-plugins-bad-plugins.hierarchy b/docs/plugins/gst-plugins-bad-plugins.hierarchy
-index 51340be..7b1dc47 100644
---- a/docs/plugins/gst-plugins-bad-plugins.hierarchy
-+++ b/docs/plugins/gst-plugins-bad-plugins.hierarchy
-@@ -1,7 +1,5 @@
- GObject
-   GstColorBalanceChannel
--  GstMixerTrack
--    GstMixerOptions
-   GstObject
-     GstBus
-     GstClock
-@@ -14,7 +12,6 @@ GObject
-       GstAiffParse
-       GstAsfMux
-       GstAsfParse
--      GstAssRender
-       GstBaseAudioVisualizer
-         GstSpaceScope
-         GstSpectraScope
-@@ -35,48 +32,32 @@ GObject
-       GstBaseSink
-         GstBaseAudioSink
-           GstAudioSink
--            GstApExSink
-             GstNasSink
--            GstOpenALSink
-             GstSDLAudioSink
-         GstChecksumSink
--        GstCurlSink
-         GstDCCPClientSink
-         GstDCCPServerSink
-         GstFBDEVSink
-         GstLinsysSdiSink
--        GstRTMPSink
--        GstSFSink
-         GstShmSink
-         GstVideoSink
--          GstDfbVideoSink
-           GstSDLVideoSink
-           VdpSink
-       GstBaseSrc
-         GstDTMFSrc
-         GstDataURISrc
--        GstFliteTestSrc
-         GstLinsysSdiSrc
-         GstPushSrc
--          GstBaseAudioSrc
--            GstAudioSrc
--              GstOpenalSrc
-           GstDCCPClientSrc
-           GstDCCPServerSrc
-           GstDc1394
-           GstDvbSrc
--          GstMMS
--          GstNeonhttpSrc
--          GstRTMPSrc
-           GstRfbSrc
-           GstShmSrc
-           GstVCDSrc
-         GstRTPDTMFSrc
--        GstSFSrc
-       GstBaseTransform
-         GstAudioFilter
--          GstBPMDetect
--          GstOFA
-           GstStereo
-         GstBayer2RGB
-         GstCogScale
-@@ -119,23 +100,27 @@ GObject
-             GstMirror
-             GstRotate
-             GstSquare
--          GstRsvgOverlay
-+          GstOpencvVideoFilter
-+            GstCvDilateErode
-+              GstCvDilate
-+              GstCvErode
-+            GstCvEqualizeHist
-+            GstCvLaplace
-+            GstCvSmooth
-+            GstCvSobel
-+            Gstfacedetect
-           GstSolarize
-           GstVideoAnalyse
-           GstVideoDetect
-           GstVideoMark
--          GstZBar
-         GstVideoFilter2
-           GstSceneChange
-           GstZebraStripe
-         GstVideoMaxRate
-       GstBaseVideoCodec
-         GstBaseVideoDecoder
--          GstSchroDec
-           GstVP8Dec
-         GstBaseVideoEncoder
--          GstDiracEnc
--          GstSchroEnc
-           GstVP8Enc
-       GstBin
-         DvbBaseBin
-@@ -152,57 +137,39 @@ GObject
-         GstPipeline
-           GstCameraBin
-         GstSDPDemux
--        RsnDvdBin
--      GstBz2dec
--      GstBz2enc
--      GstCDAudio
-       GstCDXAParse
--      GstCeltDec
--      GstCeltEnc
-       GstChopMyData
-       GstCompare
-       GstDVBSubOverlay
-       GstDVDSpu
-       GstDecklinkSink
-       GstDecklinkSrc
--      GstDtsDec
--      GstFaad
-+      GstFaac
-       GstFestival
-       GstFieldAnalysis
-       GstFreeze
--      GstGSMDec
--      GstGSMEnc
--      GstGmeDec
-       GstHLSDemux
-       GstId3BaseMux
-         GstId3Mux
-       GstInterlace
--      GstInvtelecine
-       GstIvfParse
-       GstJP2kDecimator
-       GstJifMux
-       GstJpegParse
--      GstKateDec
--      GstKateEnc
--      GstKateParse
--        GstKateTag
-       GstLegacyH264Parse
-       GstLiveAdder
-       GstMSE
-       GstMXFDemux
-       GstMXFMux
--      GstMimDec
--      GstMimEnc
--      GstModPlug
+diff -rupN orig/docs/plugins/gst-plugins-bad-plugins.hierarchy version2/docs/plugins/gst-plugins-bad-plugins.hierarchy
+--- orig/docs/plugins/gst-plugins-bad-plugins.hierarchy	2011-05-10 11:34:02.000000000 +0100
++++ version2/docs/plugins/gst-plugins-bad-plugins.hierarchy	2011-07-06 04:16:47.000000000 +0100
+@@ -193,6 +193,7 @@ GObject
+       GstAmrWbEnc
+       Gstedgedetect
+       Gstfaceblur
 +      GstMotioncells
-       GstMpegPSDemux
-       GstMpegTSDemux
--      GstMusepackDec
-       GstMveDemux
-       GstMveMux
-       GstNsfDec
-       GstNuvDemux
-+      GstOpencvTextOverlay
-       GstPcapParse
--      GstPitch
-       GstPnmdec
-       GstPnmenc
-       GstRTPMux
-@@ -212,36 +179,28 @@ GObject
-         GstVideoParse
-       GstRealAudioDec
-       GstRealVideoDec
--      GstRsvgDec
-       GstSSim
-       GstSdiDemux
-       GstSdiMux
-       GstSegmentClip
-         GstAudioSegmentClip
-         GstVideoSegmentClip
--      GstSignalProcessor
--        ladspa-amp-mono
--        ladspa-amp-stereo
--        ladspa-delay-5s
--        ladspa-hpf
--        ladspa-lpf
--        ladspa-noise-white
--        ladspa-sine-faaa
--        ladspa-sine-faac
--        ladspa-sine-fcaa
--        ladspa-sine-fcac
-       GstSirenDec
-       GstSirenEnc
-       GstSpeed
-       GstSrtEnc
--      GstTRM
-+      GstTemplateMatch
-       GstTtaDec
-       GstTtaParse
-       GstVMncDec
-       GstVcdParse
-       GstVdpVideoPostProcess
--      GstWildmidi
-+      GstXvidDec
-+      GstXvidEnc
-       GstY4mDec
-+      Gstedgedetect
-+      Gstfaceblur
-+      Gstpyramidsegment
-       MpegPsMux
-       MpegTSBase
-         GstTSDemux
-@@ -258,7 +217,6 @@ GObject
-       GstVdpOutputSrcPad
-       GstVdpVideoSrcPad
-     GstPadTemplate
--      GstSignalProcessorPadTemplate
-     GstPlugin
-     GstPluginFeature
-       GstElementFactory
-@@ -267,7 +225,6 @@ GObject
-     GstRegistry
-     GstRingBuffer
-       GstAudioSinkRingBuffer
--      GstAudioSrcRingBuffer
-     GstTask
-     GstTaskPool
-   GstSignalObject
-@@ -279,7 +236,6 @@ GInterface
-   GstChildProxy
-   GstColorBalance
-   GstImplementsInterface
--  GstMixer
-   GstNavigation
-   GstPhotography
-   GstPreset
-diff --git a/ext/opencv/Makefile.am b/ext/opencv/Makefile.am
-index d5a70ed..a32e16c 100644
---- a/ext/opencv/Makefile.am
-+++ b/ext/opencv/Makefile.am
+       Gstpyramidsegment
+       GstTemplateMatch
+       GstOpencvTextOverlay
+diff -rupN orig/ext/opencv/Makefile.am version2/ext/opencv/Makefile.am
+--- orig/ext/opencv/Makefile.am	2011-04-08 00:35:37.000000000 +0100
++++ version2/ext/opencv/Makefile.am	2011-07-06 04:16:32.000000000 +0100
 @@ -16,7 +16,12 @@ libgstopencv_la_SOURCES = gstopencv.c \
  			gstfacedetect.c \
  			gstpyramidsegment.c \
@@ -592,7 +464,7 @@ index d5a70ed..a32e16c 100644
  
  # flags used to compile this facedetect
  # add other _CFLAGS and _LIBS as needed
-@@ -46,4 +51,7 @@ noinst_HEADERS = gstopencvvideofilter.h gstopencvutils.h \
+@@ -46,4 +51,7 @@ noinst_HEADERS = gstopencvvideofilter.h 
  		gstfacedetect.h \
  		gstpyramidsegment.h \
  		gsttemplatematch.h \
@@ -601,11 +473,9 @@ index d5a70ed..a32e16c 100644
 +		gstmotioncells.h \
 +		motioncells_wrapper.h \
 +		MotionCells.h
-diff --git a/ext/opencv/MotionCells.cpp b/ext/opencv/MotionCells.cpp
-new file mode 100644
-index 0000000..c8d7447
---- /dev/null
-+++ b/ext/opencv/MotionCells.cpp
+diff -rupN orig/ext/opencv/MotionCells.cpp version2/ext/opencv/MotionCells.cpp
+--- orig/ext/opencv/MotionCells.cpp	1970-01-01 01:00:00.000000000 +0100
++++ version2/ext/opencv/MotionCells.cpp	2011-07-06 04:16:32.000000000 +0100
 @@ -0,0 +1,527 @@
 +/*
 + * MotionCells.cpp
@@ -1134,11 +1004,9 @@ index 0000000..c8d7447
 +				}
 +
 +}
-diff --git a/ext/opencv/MotionCells.h b/ext/opencv/MotionCells.h
-new file mode 100644
-index 0000000..521a76a
---- /dev/null
-+++ b/ext/opencv/MotionCells.h
+diff -rupN orig/ext/opencv/MotionCells.h version2/ext/opencv/MotionCells.h
+--- orig/ext/opencv/MotionCells.h	1970-01-01 01:00:00.000000000 +0100
++++ version2/ext/opencv/MotionCells.h	2011-07-06 04:16:32.000000000 +0100
 @@ -0,0 +1,182 @@
 +/*
 + * MotionDetection.h
@@ -1322,11 +1190,9 @@ index 0000000..521a76a
 +};
 +
 +#endif /* MOTIONCELLS_H_ */
-diff --git a/ext/opencv/analitics.h b/ext/opencv/analitics.h
-new file mode 100644
-index 0000000..2863a21
---- /dev/null
-+++ b/ext/opencv/analitics.h
+diff -rupN orig/ext/opencv/analitics.h version2/ext/opencv/analitics.h
+--- orig/ext/opencv/analitics.h	1970-01-01 01:00:00.000000000 +0100
++++ version2/ext/opencv/analitics.h	2011-07-06 04:16:32.000000000 +0100
 @@ -0,0 +1,47 @@
 +#ifndef ANALITICS_H_
 +#define ANALITICS_H_
@@ -1375,11 +1241,9 @@ index 0000000..2863a21
 +	int columnidx;
 +} motioncellidx;
 +#endif /* ANALITICS_H_ */
-diff --git a/ext/opencv/gstmotioncells.c b/ext/opencv/gstmotioncells.c
-new file mode 100644
-index 0000000..8ed611e
---- /dev/null
-+++ b/ext/opencv/gstmotioncells.c
+diff -rupN orig/ext/opencv/gstmotioncells.c version2/ext/opencv/gstmotioncells.c
+--- orig/ext/opencv/gstmotioncells.c	1970-01-01 01:00:00.000000000 +0100
++++ version2/ext/opencv/gstmotioncells.c	2011-07-06 04:16:32.000000000 +0100
 @@ -0,0 +1,1061 @@
 +/*
 + * GStreamer
@@ -2442,11 +2306,9 @@ index 0000000..8ed611e
 +  return gst_element_register (plugin, "motioncells", GST_RANK_NONE,
 +      GST_TYPE_MOTIONCELLS);
 +}
-diff --git a/ext/opencv/gstmotioncells.h b/ext/opencv/gstmotioncells.h
-new file mode 100644
-index 0000000..9379ec3
---- /dev/null
-+++ b/ext/opencv/gstmotioncells.h
+diff -rupN orig/ext/opencv/gstmotioncells.h version2/ext/opencv/gstmotioncells.h
+--- orig/ext/opencv/gstmotioncells.h	1970-01-01 01:00:00.000000000 +0100
++++ version2/ext/opencv/gstmotioncells.h	2011-07-06 04:16:32.000000000 +0100
 @@ -0,0 +1,103 @@
 +/*
 + * GStreamer
@@ -2551,10 +2413,9 @@ index 0000000..9379ec3
 +
 +G_END_DECLS
 +#endif /* __GST_MOTION_CELLS_H__ */
-diff --git a/ext/opencv/gstopencv.c b/ext/opencv/gstopencv.c
-index e12ca78..8f627c3 100644
---- a/ext/opencv/gstopencv.c
-+++ b/ext/opencv/gstopencv.c
+diff -rupN orig/ext/opencv/gstopencv.c version2/ext/opencv/gstopencv.c
+--- orig/ext/opencv/gstopencv.c	2011-04-08 00:35:37.000000000 +0100
++++ version2/ext/opencv/gstopencv.c	2011-07-06 04:16:32.000000000 +0100
 @@ -32,6 +32,7 @@
  #include "gstedgedetect.h"
  #include "gstfaceblur.h"
@@ -2573,11 +2434,9 @@ index e12ca78..8f627c3 100644
    if (!gst_pyramidsegment_plugin_init (plugin))
      return FALSE;
  
-diff --git a/ext/opencv/motioncells_wrapper.cpp b/ext/opencv/motioncells_wrapper.cpp
-new file mode 100644
-index 0000000..49b5f61
---- /dev/null
-+++ b/ext/opencv/motioncells_wrapper.cpp
+diff -rupN orig/ext/opencv/motioncells_wrapper.cpp version2/ext/opencv/motioncells_wrapper.cpp
+--- orig/ext/opencv/motioncells_wrapper.cpp	1970-01-01 01:00:00.000000000 +0100
++++ version2/ext/opencv/motioncells_wrapper.cpp	2011-07-06 04:16:32.000000000 +0100
 @@ -0,0 +1,161 @@
 +
 +
@@ -2740,11 +2599,9 @@ index 0000000..49b5f61
 +  if (idx > -1)
 +    motioncellsvector.at (idx).mc->freeDataFile ();
 +}
-diff --git a/ext/opencv/motioncells_wrapper.h b/ext/opencv/motioncells_wrapper.h
-new file mode 100644
-index 0000000..2a051d4
---- /dev/null
-+++ b/ext/opencv/motioncells_wrapper.h
+diff -rupN orig/ext/opencv/motioncells_wrapper.h version2/ext/opencv/motioncells_wrapper.h
+--- orig/ext/opencv/motioncells_wrapper.h	1970-01-01 01:00:00.000000000 +0100
++++ version2/ext/opencv/motioncells_wrapper.h	2011-07-06 04:16:32.000000000 +0100
 @@ -0,0 +1,50 @@
 +
 +/*
