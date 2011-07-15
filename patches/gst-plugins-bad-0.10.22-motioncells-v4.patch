@@ -1552,7 +1552,7 @@ diff -rupN orig/ext/opencv/gstmotioncells.c version3/ext/opencv/gstmotioncells.c
 +  filter->gap = GAP_DEF;
 +  filter->postnomotion = POST_NO_MOTION_DEF;
 +
-+  pthread_mutexattr_settype(&mAttr, PTHREAD_MUTEX_RECURSIVE_NP);
++  pthread_mutexattr_settype(&mAttr, PTHREAD_MUTEX_RECURSIVE);
 +  pthread_mutex_init(&filter->propset_mutex , &mAttr);
 +
 +  filter->prev_datafile = g_strdup (" ");
