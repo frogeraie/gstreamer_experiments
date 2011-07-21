@@ -1,14 +1,22 @@
 require 'gst'
 
-# path = File.expand_path "~/Dropbox/CCTV/1856071.mp4"
-path = File.expand_path "~/Dropbox/CCTV/20090821 Ilia intruder/223542.mp4"
-# src = "uridecodebin uri=rtsp://hackeron:password@192.168.0.252/nphMpeg4/g726-640x480 name=dec"
-src = "filesrc location=\"%s\" ! decodebin2" % path
-#
-pipeline = Gst::Parse.launch('
-   %s ! videorate ! videoscale ! ffmpegcolorspace ! motioncells postallmotion=true threshold=0.05 gridx=32 gridy=32 ! ffmpegcolorspace ! ximagesink' % [ src ] )
-   # %s ! videorate ! videoscale ! ffmpegcolorspace ! ximagesink' % [ src ] )
-   # %s ! videorate ! videoscale ! ffmpegcolorspace ! "video/x-raw-yuv,width=320,height=240,framerate=10/1" ! ximagesink' % [ src ] )
+pipeline = Gst::Pipeline.new
+
+# Source
+source = Gst::ElementFactory.make("filesrc")
+source.location = File.expand_path('~/Dropbox/VPN/Public/18-31-18.mkv')
+
+# Decodebin
+decodebin = Gst::ElementFactory.make("decodebin2")
+
+# Sink
+sink = Gst::ElementFactory.make("fakesink")
+
+# Add element objects to pipeline
+pipeline.add(source, decodebin, sink)
+
+# Link elements
+source >> decodebin >> sink
 
 # Main loop
 loop = GLib::MainLoop.new(nil, false)
@@ -57,10 +65,6 @@ bus.add_watch do |bus, message|
     p "%s %s" % [ message.type.name, message.structure ]
   when Gst::Message::NEW_CLOCK
     p "%s: %s" % [ message.type.name, message.structure["clock"].name ]
-  when Gst::Message::ELEMENT
-    p message.structure
-  when Gst::Message::QOS
-    # Used in ximagesink - nothing interesting there for us
   else
     p "--"
     p message.type.name
