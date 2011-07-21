@@ -2369,7 +2369,7 @@ diff -rupN orig/ext/opencv/gstmotioncells.h version5/ext/opencv/gstmotioncells.h
 +#endif /* __GST_MOTION_CELLS_H__ */
 diff -rupN orig/ext/opencv/gstopencv.c version5/ext/opencv/gstopencv.c
 --- orig/ext/opencv/gstopencv.c	2011-04-08 00:35:37.000000000 +0100
-+++ version5/ext/opencv/gstopencv.c	2011-07-21 16:14:41.000000000 +0100
++++ version5/ext/opencv/gstopencv.c	2011-07-21 16:26:01.000000000 +0100
 @@ -32,6 +32,7 @@
  #include "gstedgedetect.h"
  #include "gstfaceblur.h"
@@ -2383,7 +2383,7 @@ diff -rupN orig/ext/opencv/gstopencv.c version5/ext/opencv/gstopencv.c
      return FALSE;
  
 +  if(!gst_motioncells_plugin_init (plugin))
-+    return FALSE;FALSE
++    return FALSE;
 +
    if (!gst_pyramidsegment_plugin_init (plugin))
      return FALSE;
