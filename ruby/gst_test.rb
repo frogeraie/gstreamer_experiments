@@ -1,12 +1,17 @@
 require 'gst'
 
 # path = File.expand_path "~/Dropbox/CCTV/1856071.mp4"
-path = File.expand_path "~/Dropbox/CCTV/20090821 Ilia intruder/223542.mp4"
-# src = "uridecodebin uri=rtsp://hackeron:password@192.168.0.252/nphMpeg4/g726-640x480 name=dec"
-src = "filesrc location=\"%s\" ! decodebin2" % path
-#
+# path = File.expand_path "~/Dropbox/CCTV/20090821 Ilia intruder/223542.mp4"
+# path = File.expand_path "~/Dropbox/CCTV/20110625 Oracle Server Room - Touching DVR.mp4"
+# path = File.expand_path "~/Dropbox/CCTV/20080726 Ilial Thief/2008-07-26__02_15_27__Front PTZ.avi"
+src = "uridecodebin uri=rtsp://hackeron:password@192.168.0.252/nphMpeg4/g726-640x480 name=dec"
+# src = "filesrc location=\"%s\" ! decodebin2" % path
+
 pipeline = Gst::Parse.launch('
-   %s ! videorate ! videoscale ! ffmpegcolorspace ! motioncells postallmotion=true threshold=0.05 gridx=32 gridy=32 ! ffmpegcolorspace ! ximagesink' % [ src ] )
+   %s ! videorate ! videoscale ! ffmpegcolorspace ! motioncells postallmotion=false gridx=32 gridy=32 sensitivity=0.3 threshold=0.01 minimummotionframes=2 ! ffmpegcolorspace ! ximagesink' % [ src ] )
+   # %s ! videorate ! videoscale ! ffmpegcolorspace ! ximagesink' % [ src ] )
+   # %s ! videorate ! videoscale ! video/x-raw-yuv,framerate=5/1 ! ffmpegcolorspace ! motioncells postallmotion=false gridx=32 gridy=32 sensitivity=0.3 threshold=0.01 ! ffmpegcolorspace ! ximagesink' % [ src ] )
+   # %s ! videorate ! videoscale ! video/x-raw-yuv,width=320,height=240,framerate=5/1 ! ffmpegcolorspace ! motioncells postallmotion=true minimummotionframes=25 threshold=0.05 gridx=32 gridy=32 ! ffmpegcolorspace ! ximagesink' % [ src ] )
    # %s ! videorate ! videoscale ! ffmpegcolorspace ! ximagesink' % [ src ] )
    # %s ! videorate ! videoscale ! ffmpegcolorspace ! "video/x-raw-yuv,width=320,height=240,framerate=10/1" ! ximagesink' % [ src ] )
 
